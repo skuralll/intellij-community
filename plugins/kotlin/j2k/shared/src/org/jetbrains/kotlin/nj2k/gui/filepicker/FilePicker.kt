@@ -14,8 +14,8 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBFont
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
 import org.jetbrains.kotlin.nj2k.gui.common.FileTreeListener
-import org.jetbrains.kotlin.nj2k.gui.common.FileTreePanel
 import org.jetbrains.kotlin.nj2k.gui.common.FileViewerPanel
+import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
 import java.awt.Dimension
 import javax.swing.JComponent
 import javax.swing.UIManager
@@ -39,7 +39,7 @@ class FilePicker(
 
     override fun createCenterPanel(): JComponent {
         // ファイルピッカー
-        val filePicker = FileTreePanel(rootFile, convertFiles, true)
+        val filePicker = JKFileTreePanel(rootFile, convertFiles, true)
         filePicker.fileSelectionListeners.add(this)
         filePicker.preferredSize = Dimension(400, 400)
         // ビューア

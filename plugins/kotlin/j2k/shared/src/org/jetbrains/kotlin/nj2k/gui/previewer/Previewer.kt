@@ -5,7 +5,7 @@ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.dsl.builder.panel
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
-import org.jetbrains.kotlin.nj2k.gui.common.FileTreePanel
+import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
 import java.awt.Dimension
 import javax.swing.JComponent
 
@@ -19,7 +19,7 @@ class Previewer(private val rootFile: VirtualFile) : DialogWrapper(true) {
 
     override fun createCenterPanel(): JComponent {
         // ファイルエクスプローラ
-        val fileExplorer = FileTreePanel(rootFile)
+        val fileExplorer = JKFileTreePanel(rootFile)
         fileExplorer.preferredSize = Dimension(400, 400)
         // パネル作成
         return panel {

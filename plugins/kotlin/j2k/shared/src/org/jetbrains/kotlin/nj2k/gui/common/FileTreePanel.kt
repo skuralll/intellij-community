@@ -10,35 +10,26 @@ import com.intellij.ui.CheckboxTreeListener
 import com.intellij.ui.CheckedTreeNode
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
-import org.jetbrains.kotlin.idea.util.isJavaFileType
-import org.jetbrains.kotlin.idea.util.isKotlinFileType
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
-class FileTreePanel(
+open class FileTreePanel(
     rootFile: VirtualFile,
     private val selectedFiles: MutableList<VirtualFile> = mutableListOf(),
     hasCheckBox: Boolean = false
 ) : JBPanel<JBPanel<*>>(BorderLayout()) {
 
-    private val tree: CheckboxTree
-    private val rootNode: CheckedTreeNode
+    protected val tree: CheckboxTree
+    protected val rootNode: CheckedTreeNode
     val fileSelectionListeners = mutableListOf<FileTreeListener>()
-
-    // オプション
-    var enableKotlin = false // Kotlinファイルを選択可能にするか
-        set(value) {
-            field = value
-            tree.repaint()
-        }
 
     init {
         // ツリー構築
         rootNode = createNode(rootFile)
-        tree = CheckboxTree(CheckBoxTreeCellRenderer(hasCheckBox, enableKotlin), rootNode)
+        tree = CheckboxTree(CheckBoxTreeCellRenderer(hasCheckBox), rootNode)
         uncheckAllNodes(rootNode)
         checkFilesNodes(selectedFiles)
         expandFilesNodes(selectedFiles)
@@ -50,11 +41,14 @@ class FileTreePanel(
         add(scrollpane, BorderLayout.CENTER)
     }
 
+    // 表示するファイルかどうかを取得する
+    open fun isEnabledFile(file: VirtualFile): Boolean = true
+
     // 再帰的にノード作成
-    private fun createNode(file: VirtualFile): CheckedTreeNode {
+    protected fun createNode(file: VirtualFile): CheckedTreeNode {
         val node = CheckedTreeNode(file)
         if (file.isDirectory) {
-            file.children.filter { it.isJavaFileType() || it.isKotlinFileType() || it.isDirectory }.forEach { child ->
+            file.children.filter { isEnabledFile(it) }.forEach { child ->
                 node.add(createNode(child))
             }
         }
@@ -62,7 +56,7 @@ class FileTreePanel(
     }
 
     // 条件にマッチしたノードを操作
-    private fun operateMatchedNodes(node: CheckedTreeNode, condition: (CheckedTreeNode) -> Boolean, operation: (CheckedTreeNode) -> Unit) {
+    protected fun operateMatchedNodes(node: CheckedTreeNode, condition: (CheckedTreeNode) -> Boolean, operation: (CheckedTreeNode) -> Unit) {
         if (condition(node)) operation(node)
         node.children().asSequence().filterIsInstance<CheckedTreeNode>().forEach {
             operateMatchedNodes(it, condition, operation)
@@ -70,22 +64,27 @@ class FileTreePanel(
     }
 
     // 全てのノードをチェック解除
-    private fun uncheckAllNodes(node: CheckedTreeNode) {
+    protected fun uncheckAllNodes(node: CheckedTreeNode) {
         operateMatchedNodes(node, { true }, { it.isChecked = false })
     }
 
     // 指定したノードをチェック
-    private fun checkNodes(node: CheckedTreeNode, files: List<VirtualFile>) {
+    protected fun checkNodes(node: CheckedTreeNode, files: List<VirtualFile>) {
         operateMatchedNodes(node, { files.contains(it.userObject) }, { it.isChecked = true })
     }
 
     // 指定したファイルのノードをチェック
-    private fun checkFilesNodes(files: List<VirtualFile>) {
+    protected fun checkFilesNodes(files: List<VirtualFile>) {
         checkNodes(rootNode, files)
     }
 
+    // 指定したノードを無効化
+    protected fun disableNodes(node: CheckedTreeNode, files: List<VirtualFile>) {
+        operateMatchedNodes(node, { files.contains(it.userObject) }, { it.isEnabled = false })
+    }
+
     // 指定したノードを展開する.Leafをexpandしても反映されない不具合があるため、親ディレクトリをexpandする
-    private fun expandNodes(files: List<VirtualFile>){
+    protected fun expandNodes(files: List<VirtualFile>){
         val dirs = files.mapTo(mutableSetOf()) { if (it.isFile) it.parent else it }
         operateMatchedNodes(rootNode, { dirs.contains(it.userObject) }, {
             tree.expandPath(TreePath(it.path))
@@ -93,12 +92,12 @@ class FileTreePanel(
     }
 
     // 指定したファイルのノードを展開
-    private fun expandFilesNodes(files: List<VirtualFile>) {
+    protected fun expandFilesNodes(files: List<VirtualFile>) {
         expandNodes(files)
     }
 
     // イベント登録
-    private fun registerEvents(checkBoxTree: CheckboxTree) {
+    protected fun registerEvents(checkBoxTree: CheckboxTree) {
         // チェクボックスの状態変更イベント
         checkBoxTree.addCheckboxTreeListener(object : CheckboxTreeListener {
             override fun nodeStateChanged(node: CheckedTreeNode) {
@@ -125,7 +124,7 @@ class FileTreePanel(
     }
 
     // カスタムセルレンダラ
-    private class CheckBoxTreeCellRenderer(private val hasCheckBox: Boolean, private val enableKotlin: Boolean) :
+    private class CheckBoxTreeCellRenderer(private val hasCheckBox: Boolean) :
         CheckboxTree.CheckboxTreeCellRenderer() {
         override fun customizeRenderer(
             tree: JTree?,
@@ -147,14 +146,6 @@ class FileTreePanel(
                     file.isFile -> FileTypeManager.getInstance().getFileTypeByFile(file).icon
                     else -> null
                 }
-                // ノードごとに有効・無効切り替え(設定は次のノードにも引き継がれるため,最初に明示的にtrueにしておく)
-                // TODO : チェックボックスを無効化しても選択可能になってしまう問題を修正する
-                //textRenderer.isEnabled = true
-                //checkbox.isEnabled = true
-                //if(file.isKotlinFileType() && !enableKotlin){
-                //    textRenderer.isEnabled = false
-                //    checkbox.isEnabled = false
-                //}
             }
         }
     }
