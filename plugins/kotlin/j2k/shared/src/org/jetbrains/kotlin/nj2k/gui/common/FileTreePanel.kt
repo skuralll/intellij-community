@@ -29,7 +29,7 @@ open class FileTreePanel(
     init {
         // ツリー構築
         rootNode = createNode(rootFile)
-        tree = CheckboxTree(CheckBoxTreeCellRenderer(hasCheckBox), rootNode)
+        tree = CheckboxTree(CustomCheckBoxTreeCellRenderer(hasCheckBox), rootNode)
         uncheckAllNodes(rootNode)
         checkFilesNodes(selectedFiles)
         expandFilesNodes(selectedFiles)
@@ -44,6 +44,9 @@ open class FileTreePanel(
     // 表示するファイルかどうかを取得する
     open fun isEnabledFile(file: VirtualFile): Boolean = true
 
+    // セルレンダラを取得する
+    open fun getCellRenderer(hasCheckBox: Boolean): CheckboxTree.CheckboxTreeCellRenderer = CustomCheckBoxTreeCellRenderer(hasCheckBox)
+
     // 再帰的にノード作成
     protected fun createNode(file: VirtualFile): CheckedTreeNode {
         val node = CheckedTreeNode(file)
@@ -56,7 +59,11 @@ open class FileTreePanel(
     }
 
     // 条件にマッチしたノードを操作
-    protected fun operateMatchedNodes(node: CheckedTreeNode, condition: (CheckedTreeNode) -> Boolean, operation: (CheckedTreeNode) -> Unit) {
+    protected fun operateMatchedNodes(
+        node: CheckedTreeNode,
+        condition: (CheckedTreeNode) -> Boolean,
+        operation: (CheckedTreeNode) -> Unit
+    ) {
         if (condition(node)) operation(node)
         node.children().asSequence().filterIsInstance<CheckedTreeNode>().forEach {
             operateMatchedNodes(it, condition, operation)
@@ -83,8 +90,17 @@ open class FileTreePanel(
         operateMatchedNodes(node, { files.contains(it.userObject) }, { it.isEnabled = false })
     }
 
+    // マッチしたノードが有効かどうかを切り替える
+    protected fun setActiveNodes(condition: (CheckedTreeNode) -> Boolean, active: Boolean) {
+        operateMatchedNodes(rootNode, condition) {
+            if (!active) it.isChecked = false
+            it.isEnabled = active
+        }
+    }
+
+
     // 指定したノードを展開する.Leafをexpandしても反映されない不具合があるため、親ディレクトリをexpandする
-    protected fun expandNodes(files: List<VirtualFile>){
+    protected fun expandNodes(files: List<VirtualFile>) {
         val dirs = files.mapTo(mutableSetOf()) { if (it.isFile) it.parent else it }
         operateMatchedNodes(rootNode, { dirs.contains(it.userObject) }, {
             tree.expandPath(TreePath(it.path))
@@ -123,33 +139,38 @@ open class FileTreePanel(
         })
     }
 
-    // カスタムセルレンダラ
-    private class CheckBoxTreeCellRenderer(private val hasCheckBox: Boolean) :
-        CheckboxTree.CheckboxTreeCellRenderer() {
-        override fun customizeRenderer(
-            tree: JTree?,
-            value: Any?,
-            selected: Boolean,
-            expanded: Boolean,
-            leaf: Boolean,
-            row: Int,
-            hasFocus: Boolean
-        ) {
-            if (value !is DefaultMutableTreeNode) return
-            // チェックボックス表示設定
-            checkbox.isVisible = hasCheckBox
-            // アイコン/テキスト設定
-            (value.userObject as? VirtualFile)?.let { file ->
-                textRenderer.append(file.name)
-                textRenderer.icon = when {
-                    file.isDirectory -> AllIcons.Nodes.Folder
-                    file.isFile -> FileTypeManager.getInstance().getFileTypeByFile(file).icon
-                    else -> null
-                }
+}
+
+// カスタムセルレンダラ
+class CustomCheckBoxTreeCellRenderer(private val hasCheckBox: Boolean) :
+    CheckboxTree.CheckboxTreeCellRenderer() {
+    override fun customizeRenderer(
+        tree: JTree?,
+        value: Any?,
+        selected: Boolean,
+        expanded: Boolean,
+        leaf: Boolean,
+        row: Int,
+        hasFocus: Boolean
+    ) {
+        if (value !is DefaultMutableTreeNode) return
+        // チェックボックス表示設定
+        checkbox.isVisible = hasCheckBox
+        // アイコン/テキスト設定
+        (value.userObject as? VirtualFile)?.let { file ->
+            textRenderer.append(file.name)
+            textRenderer.icon = when {
+                file.isDirectory -> AllIcons.Nodes.Folder
+                file.isFile -> FileTypeManager.getInstance().getFileTypeByFile(file).icon
+                else -> null
+            }
+            // 有効/無効時に色を変更
+            textRenderer.isEnabled = true
+            if (value is CheckedTreeNode && !value.isEnabled) {
+                textRenderer.isEnabled = false
             }
         }
     }
-
 }
 
 interface FileTreeListener {

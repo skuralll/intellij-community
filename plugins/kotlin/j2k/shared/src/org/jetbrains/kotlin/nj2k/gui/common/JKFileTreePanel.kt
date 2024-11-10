@@ -9,14 +9,19 @@ class JKFileTreePanel(
     rootFile: VirtualFile,
     selectedFiles: MutableList<VirtualFile> = mutableListOf(),
     hasCheckBox: Boolean = false
-) : FileTreePanel(rootFile, selectedFiles, hasCheckBox){
+) : FileTreePanel(rootFile, selectedFiles, hasCheckBox) {
 
     // オプション
-    var enableKotlin = false // Kotlinファイルを選択可能にするか
+    var enableKotlin = true // Kotlinファイルを選択可能にするか
         set(value) {
             field = value
-            tree.repaint()
+            setActiveNodes({ it.userObject is VirtualFile && (it.userObject as VirtualFile).isKotlinFileType() }, value)
+            repaint()
         }
+
+    init {
+        enableKotlin = false
+    }
 
     // ディレクトリ, Java, Kotlinファイルのみ有効にする
     override fun isEnabledFile(file: VirtualFile): Boolean {
