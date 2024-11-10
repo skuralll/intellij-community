@@ -24,13 +24,13 @@ class FileTreePanel(
     hasCheckBox: Boolean = false
 ) : JBPanel<JBPanel<*>>(BorderLayout()) {
 
-    private val tree : CheckboxTree
-    private val rootNode : CheckedTreeNode
+    private val tree: CheckboxTree
+    private val rootNode: CheckedTreeNode
     val fileSelectionListeners = mutableListOf<FileTreeListener>()
 
     // オプション
     var enableKotlin = false // Kotlinファイルを選択可能にするか
-        set(value){
+        set(value) {
             field = value
             tree.repaint()
         }
@@ -61,44 +61,40 @@ class FileTreePanel(
         return node
     }
 
+    // 条件にマッチしたノードを操作
+    private fun operateMatchedNodes(node: CheckedTreeNode, condition: (CheckedTreeNode) -> Boolean, operation: (CheckedTreeNode) -> Unit) {
+        if (condition(node)) operation(node)
+        node.children().asSequence().filterIsInstance<CheckedTreeNode>().forEach {
+            operateMatchedNodes(it, condition, operation)
+        }
+    }
+
     // 全てのノードをチェック解除
-    fun uncheckAllNodes(node: CheckedTreeNode) {
-        node.isChecked = false
-        node.children().asSequence().filterIsInstance<CheckedTreeNode>().forEach { uncheckAllNodes(it) }
+    private fun uncheckAllNodes(node: CheckedTreeNode) {
+        operateMatchedNodes(node, { true }, { it.isChecked = false })
     }
 
     // 指定したノードをチェック
     private fun checkNodes(node: CheckedTreeNode, files: List<VirtualFile>) {
-        if (files.contains(node.userObject)) {
-            node.isChecked = true
-        }
-        node.children().asSequence().filterIsInstance<CheckedTreeNode>().forEach {
-            checkNodes(it, files)
-        }
+        operateMatchedNodes(node, { files.contains(it.userObject) }, { it.isChecked = true })
     }
 
     // 指定したファイルのノードをチェック
-    fun checkFilesNodes(files: List<VirtualFile>) {
+    private fun checkFilesNodes(files: List<VirtualFile>) {
         checkNodes(rootNode, files)
     }
 
     // 指定したノードを展開する.Leafをexpandしても反映されない不具合があるため、親ディレクトリをexpandする
-    private fun expandNodes(jTree: JTree, node: CheckedTreeNode, files: List<VirtualFile>) {
+    private fun expandNodes(files: List<VirtualFile>){
         val dirs = files.mapTo(mutableSetOf()) { if (it.isFile) it.parent else it }
-        fun CheckedTreeNode.expandNodesInner(files: Set<VirtualFile>) {
-            if (files.contains(this.userObject)) {
-                jTree.expandPath(TreePath(this.path))
-            }
-            children().asSequence()
-                .filterIsInstance<CheckedTreeNode>()
-                .forEach { it.expandNodesInner(files) }
-        }
-        node.expandNodesInner(dirs)
+        operateMatchedNodes(rootNode, { dirs.contains(it.userObject) }, {
+            tree.expandPath(TreePath(it.path))
+        })
     }
 
     // 指定したファイルのノードを展開
-    fun expandFilesNodes(files: List<VirtualFile>) {
-        expandNodes(tree, rootNode, files)
+    private fun expandFilesNodes(files: List<VirtualFile>) {
+        expandNodes(files)
     }
 
     // イベント登録
@@ -129,7 +125,8 @@ class FileTreePanel(
     }
 
     // カスタムセルレンダラ
-    private class CheckBoxTreeCellRenderer(private val hasCheckBox: Boolean, private val enableKotlin : Boolean) : CheckboxTree.CheckboxTreeCellRenderer() {
+    private class CheckBoxTreeCellRenderer(private val hasCheckBox: Boolean, private val enableKotlin: Boolean) :
+        CheckboxTree.CheckboxTreeCellRenderer() {
         override fun customizeRenderer(
             tree: JTree?,
             value: Any?,
@@ -152,12 +149,12 @@ class FileTreePanel(
                 }
                 // ノードごとに有効・無効切り替え(設定は次のノードにも引き継がれるため,最初に明示的にtrueにしておく)
                 // TODO : チェックボックスを無効化しても選択可能になってしまう問題を修正する
-                textRenderer.isEnabled = true
-                checkbox.isEnabled = true
-                if(file.isKotlinFileType() && !enableKotlin){
-                    textRenderer.isEnabled = false
-                    checkbox.isEnabled = false
-                }
+                //textRenderer.isEnabled = true
+                //checkbox.isEnabled = true
+                //if(file.isKotlinFileType() && !enableKotlin){
+                //    textRenderer.isEnabled = false
+                //    checkbox.isEnabled = false
+                //}
             }
         }
     }
