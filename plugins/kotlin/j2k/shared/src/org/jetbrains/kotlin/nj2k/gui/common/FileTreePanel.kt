@@ -41,7 +41,7 @@ open class FileTreePanel(
         add(scrollpane, BorderLayout.CENTER)
     }
 
-    // 表示するファイルかどうかを取得する
+    // 表示,選択可能なファイルかどうかを取得する
     open fun isEnabledFile(file: VirtualFile): Boolean = true
 
     // セルレンダラを取得する
@@ -97,7 +97,6 @@ open class FileTreePanel(
             it.isEnabled = active
         }
     }
-
 
     // 指定したノードを展開する.Leafをexpandしても反映されない不具合があるため、親ディレクトリをexpandする
     protected fun expandNodes(files: List<VirtualFile>) {
