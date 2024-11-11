@@ -2,6 +2,7 @@
 package org.jetbrains.kotlin.nj2k.gui.filepicker
 
 import com.intellij.ide.highlighter.JavaFileType
+import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
@@ -14,8 +15,8 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBFont
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
 import org.jetbrains.kotlin.nj2k.gui.common.FileTreeListener
-import org.jetbrains.kotlin.nj2k.gui.common.FileViewerPanel
 import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
+import org.jetbrains.kotlin.nj2k.gui.common.SourceViewField
 import java.awt.Dimension
 import javax.swing.JComponent
 import javax.swing.UIManager
@@ -26,7 +27,8 @@ class FilePicker(
     private val convertFiles: MutableList<VirtualFile>
 ) : DialogWrapper(true), FileTreeListener {
 
-    private val fileViewer = FileViewerPanel(project, rootFile)
+    private val fileViewer = SourceViewPanel(project, rootFile)
+    private val fileViewerPanel = SourceViewField(EditorFactory.getInstance().createDocument(""), project, rootFile.fileType, true)
     private val fileCounter = JBLabel(KotlinBundle.message("action.j2k.gui.file_picker.file_counter", getFileCount(convertFiles))).apply {
         font = JBFont.medium()
         foreground = UIManager.getColor("Component.infoForeground")
@@ -46,10 +48,10 @@ class FilePicker(
         fileViewer.preferredSize = Dimension(600, 400)
         // パネル作成
         return panel {
-            row{
+            row {
                 cell(JBLabel(KotlinBundle.message("action.j2k.gui.file_picker.header")).apply { font = JBFont.h3().asBold() })
             }
-            row{
+            row {
                 label(KotlinBundle.message("action.j2k.gui.file_picker.description"))
                 bottomGap(BottomGap.SMALL)
             }
@@ -57,7 +59,7 @@ class FilePicker(
                 cell(filePicker).align(Align.FILL).resizableColumn()
                 cell(fileViewer).align(Align.FILL)
             }.resizableRow()
-            row{
+            row {
                 cell(fileCounter)
             }
         }
@@ -76,7 +78,7 @@ class FilePicker(
         return convertFiles
     }
 
-    private fun getFileCount(files : List<VirtualFile>): Int {
+    private fun getFileCount(files: List<VirtualFile>): Int {
         return files
             .mapNotNull { PsiManager.getInstance(project).findFile(it) as? PsiJavaFile }
             .filter { it.fileType == JavaFileType.INSTANCE }
