@@ -29,7 +29,7 @@ open class FileTreePanel(
     init {
         // ツリー構築
         rootNode = createNode(rootFile)
-        tree = CheckboxTree(CustomCheckBoxTreeCellRenderer(hasCheckBox), rootNode)
+        tree = CheckboxTree(getCellRenderer(hasCheckBox), rootNode)
         uncheckAllNodes(rootNode)
         checkFilesNodes(selectedFiles)
         expandFilesNodes(selectedFiles)
@@ -81,13 +81,8 @@ open class FileTreePanel(
     }
 
     // 指定したファイルのノードをチェック
-    protected fun checkFilesNodes(files: List<VirtualFile>) {
+    fun checkFilesNodes(files: List<VirtualFile>) {
         checkNodes(rootNode, files)
-    }
-
-    // 指定したノードを無効化
-    protected fun disableNodes(node: CheckedTreeNode, files: List<VirtualFile>) {
-        operateMatchedNodes(node, { files.contains(it.userObject) }, { it.isEnabled = false })
     }
 
     // マッチしたノードが有効かどうかを切り替える
@@ -95,7 +90,18 @@ open class FileTreePanel(
         operateMatchedNodes(rootNode, condition) {
             if (!active) it.isChecked = false
             it.isEnabled = active
+            //activateParent(it)
         }
+    }
+
+    // 全てのノードが有効かどうかを切り替える
+    fun setActiveAllNodes(active: Boolean){
+        setActiveNodes({ true }, active)
+    }
+
+    // 指定したファイルのノードが有効かどうかを切り替える
+    fun setActiveFilesNodes(files: List<VirtualFile>, active: Boolean) {
+        setActiveNodes({ files.contains(it.userObject) }, active)
     }
 
     // 指定したノードを展開する.Leafをexpandしても反映されない不具合があるため、親ディレクトリをexpandする
@@ -109,6 +115,22 @@ open class FileTreePanel(
     // 指定したファイルのノードを展開
     protected fun expandFilesNodes(files: List<VirtualFile>) {
         expandNodes(files)
+    }
+
+    // ノードがアクティブな子ノードを持つか
+    private fun hasActiveNode(node: CheckedTreeNode): Boolean {
+        if (node.isEnabled) return true
+        return node.children().asSequence().filterIsInstance<CheckedTreeNode>().any { hasActiveNode(it) }
+    }
+
+    // 親ノードをアクティブにする
+    private fun activateParent(node: CheckedTreeNode) {
+        println((node.userObject as VirtualFile).path)
+        if (node.parent is CheckedTreeNode) {
+            val parent = node.parent as CheckedTreeNode
+            parent.isEnabled = true
+            activateParent(parent)
+        }
     }
 
     // イベント登録

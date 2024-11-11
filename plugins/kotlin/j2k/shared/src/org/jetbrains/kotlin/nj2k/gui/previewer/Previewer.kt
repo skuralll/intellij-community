@@ -8,23 +8,30 @@ import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
 import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
+import org.jetbrains.kotlin.psi.KtFile
 import java.awt.Dimension
 import javax.swing.JComponent
 
 // 変換プレビュー
-class Previewer(private val project: Project, private val rootFile: VirtualFile) : DialogWrapper(true) {
+class Previewer(private val project: Project, private val rootFile: VirtualFile, private val ktFiles : List<KtFile>) : DialogWrapper(true) {
 
+    // UI
+    private val fileExplorer: JKFileTreePanel
     private val diffView : JKSourceDiffPanel
 
     init {
         title = KotlinBundle.message("action.j2k.gui.title")
+        // ファイルエクスプローラ
+        fileExplorer = JKFileTreePanel(rootFile)
+        fileExplorer.setActiveAllNodes(false)
+        fileExplorer.setActiveFilesNodes(ktFiles.map { it.virtualFile }, true)
+        // diff
         diffView = JKSourceDiffPanel(project, rootFile)
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         // ファイルエクスプローラ
-        val fileExplorer = JKFileTreePanel(rootFile)
         fileExplorer.preferredSize = Dimension(400, 600)
         // Diff
         diffView.preferredSize = Dimension(800, 600)
