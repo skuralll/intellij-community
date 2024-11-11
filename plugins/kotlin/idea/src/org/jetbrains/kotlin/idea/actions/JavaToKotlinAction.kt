@@ -11,6 +11,7 @@ import com.intellij.openapi.actionSystem.ActionPlaces.PROJECT_VIEW_POPUP
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
+import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
@@ -50,6 +51,7 @@ import org.jetbrains.kotlin.j2k.*
 import org.jetbrains.kotlin.j2k.ConverterSettings.Companion.defaultSettings
 import org.jetbrains.kotlin.j2k.J2kConverterExtension.Kind.*
 import org.jetbrains.kotlin.nj2k.gui.filepicker.FilePicker
+import org.jetbrains.kotlin.nj2k.gui.previewer.Previewer
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
 import java.io.IOException
@@ -148,6 +150,12 @@ class JavaToKotlinAction : AnAction() {
                         FileEditorManager.getInstance(project).openFile(it.virtualFile, /* focusEditor = */ true)
                     }
                 }
+
+
+            }
+
+            if(!Previewer(project, project.guessProjectDir()!!, newFiles).showAndGet()){
+                UndoManager.getInstance(project).undo(null)
             }
 
             return newFiles
