@@ -23,6 +23,8 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
         title = KotlinBundle.message("action.j2k.gui.title")
         // ファイルエクスプローラ
         fileExplorer = JKFileTreePanel(rootFile)
+        fileExplorer.setActiveAllNodes(false)
+        fileExplorer.setActiveFilesNodes(ktFiles.map { it.virtualFile }, true)
         // diff
         diffView = JKSourceDiffPanel(project, rootFile)
         init()
