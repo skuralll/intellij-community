@@ -21,7 +21,7 @@ class JKFileTreePanel(
         }
 
     init {
-        disableNonSourceDirectories(rootNode)
+        disableNonSourceDirectories()
     }
 
     // ディレクトリ, Java, Kotlinファイルのみ有効にする
@@ -30,7 +30,7 @@ class JKFileTreePanel(
     }
 
     // Java, Kotlinファイルが含まれていないディレクトリは無効化する
-    private fun disableNonSourceDirectories(node: CheckedTreeNode) {
+    private fun disableNonSourceDirectories() {
         setActiveNodes({ it.userObject is VirtualFile && (it.userObject as VirtualFile).isDirectory && !hasSourceFile(it) }, false)
     }
 

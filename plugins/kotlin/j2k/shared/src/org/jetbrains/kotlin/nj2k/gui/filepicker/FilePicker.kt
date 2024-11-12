@@ -27,6 +27,7 @@ class FilePicker(
     private val convertFiles: MutableList<VirtualFile>
 ) : DialogWrapper(true), FileTreeListener {
 
+    private val filePicker = JKFileTreePanel(rootFile, convertFiles, true)
     private val fileViewer = SourceViewPanel(project, rootFile)
     private val fileCounter = JBLabel(KotlinBundle.message("action.j2k.gui.file_picker.file_counter", getFileCount(convertFiles))).apply {
         font = JBFont.medium()
@@ -35,12 +36,12 @@ class FilePicker(
 
     init {
         title = KotlinBundle.message("action.j2k.gui.title")
+        filePicker.enableKotlin = false
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         // ファイルピッカー
-        val filePicker = JKFileTreePanel(rootFile, convertFiles, true)
         filePicker.fileSelectionListeners.add(this)
         filePicker.preferredSize = Dimension(400, 400)
         // ビューア
