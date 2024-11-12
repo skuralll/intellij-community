@@ -13,7 +13,7 @@ class JKFileTreePanel(
 ) : FileTreePanel(rootFile, selectedFiles, hasCheckBox) {
 
     // オプション
-    var enableKotlin = true // Kotlinファイルを選択可能にするか
+    var enableKotlin : Boolean = true // Kotlinファイルを選択可能にするか
         set(value) {
             field = value
             setActiveNodes({ it.userObject is VirtualFile && (it.userObject as VirtualFile).isKotlinFileType() }, value)
@@ -21,7 +21,6 @@ class JKFileTreePanel(
         }
 
     init {
-        enableKotlin = false
         disableNonSourceDirectories(rootNode)
     }
 
@@ -37,11 +36,10 @@ class JKFileTreePanel(
 
     // Java, Kotlinファイルがノードに含まれているか
     private fun hasSourceFile(node: CheckedTreeNode): Boolean {
-        val file = node.userObject as? VirtualFile
-        if (file != null && (file.isJavaFileType() || file.isKotlinFileType())) {
-            return true
+        return hasChildNodeMatched(node){
+            val file = it.userObject as? VirtualFile
+            file != null && (file.isJavaFileType() || file.isKotlinFileType())
         }
-        return node.children().asSequence().filterIsInstance<CheckedTreeNode>().any { hasSourceFile(it) }
     }
 
 }

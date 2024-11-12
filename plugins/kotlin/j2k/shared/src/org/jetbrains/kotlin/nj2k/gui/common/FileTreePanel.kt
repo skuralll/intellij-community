@@ -70,6 +70,12 @@ open class FileTreePanel(
         }
     }
 
+    // 指定したノードの子ノードに条件を満たすモノがあるかどうかを調べる
+    protected fun hasChildNodeMatched(node: CheckedTreeNode, condition: (CheckedTreeNode) -> Boolean): Boolean {
+        if (condition(node)) return true
+        return node.children().asSequence().filterIsInstance<CheckedTreeNode>().any { hasChildNodeMatched(it, condition) }
+    }
+
     // 全てのノードをチェック解除
     protected fun uncheckAllNodes(node: CheckedTreeNode) {
         operateMatchedNodes(node, { true }, { it.isChecked = false })
@@ -88,14 +94,18 @@ open class FileTreePanel(
     // マッチしたノードが有効かどうかを切り替える
     protected fun setActiveNodes(condition: (CheckedTreeNode) -> Boolean, active: Boolean) {
         operateMatchedNodes(rootNode, condition) {
-            if (!active) it.isChecked = false
-            it.isEnabled = active
-            //activateParent(it)
+            it.isEnabled = active // activateParentの前に実行する(有効ノード探索のため)
+            if (active) {
+                activateParent(it)
+            } else {
+                deactivateParent(it)
+                it.isChecked = false
+            }
         }
     }
 
     // 全てのノードが有効かどうかを切り替える
-    fun setActiveAllNodes(active: Boolean){
+    fun setActiveAllNodes(active: Boolean) {
         setActiveNodes({ true }, active)
     }
 
@@ -125,11 +135,21 @@ open class FileTreePanel(
 
     // 親ノードをアクティブにする
     private fun activateParent(node: CheckedTreeNode) {
-        println((node.userObject as VirtualFile).path)
         if (node.parent is CheckedTreeNode) {
             val parent = node.parent as CheckedTreeNode
             parent.isEnabled = true
             activateParent(parent)
+        }
+    }
+
+    // 親ノードを非アクティブにする
+    private fun deactivateParent(node: CheckedTreeNode) {
+        if (node.parent is CheckedTreeNode) {
+            val parent = node.parent as CheckedTreeNode
+            if (!hasActiveNode(parent)) {
+                parent.isEnabled = false
+                deactivateParent(parent)
+            }
         }
     }
 
