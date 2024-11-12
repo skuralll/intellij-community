@@ -9,19 +9,19 @@ import com.intellij.ui.components.JBPanel
 import org.jetbrains.kotlin.nj2k.gui.common.SourceViewField
 import java.awt.BorderLayout
 
-class JKSourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel<*>>(BorderLayout()) {
+class SourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel<*>>(BorderLayout()) {
 
     // ソースビューア
-    private val javaViewer = SourceViewField(null, project, FileTypeManager.getInstance().getFileTypeByExtension("java"), true)
-    private val ktViewer = SourceViewField(null, project, FileTypeManager.getInstance().getFileTypeByExtension("kt"), true)
+    val beforeViewer = SourceViewField(null, project, FileTypeManager.getInstance().getFileTypeByExtension("java"), true)
+    val afterViewer = SourceViewField(null, project, FileTypeManager.getInstance().getFileTypeByExtension("kt"), true)
 
     init {
         // Splitterを使って横に分割表示
         val splitter = Splitter(false, 0.5f) // trueは水平方向に分割、0.5fは分割位置（中央）
         splitter.dividerWidth = 2
         splitter.setResizeEnabled(false)
-        splitter.firstComponent = javaViewer
-        splitter.secondComponent = ktViewer
+        splitter.firstComponent = beforeViewer
+        splitter.secondComponent = afterViewer
         add(splitter, BorderLayout.CENTER)
     }
 

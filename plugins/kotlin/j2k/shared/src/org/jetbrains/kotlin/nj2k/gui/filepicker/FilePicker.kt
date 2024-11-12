@@ -37,12 +37,12 @@ class FilePicker(
     init {
         title = KotlinBundle.message("action.j2k.gui.title")
         filePicker.enableKotlin = false
+        filePicker.fileSelectionListeners.add(this)
         init()
     }
 
     override fun createCenterPanel(): JComponent {
         // ファイルピッカー
-        filePicker.fileSelectionListeners.add(this)
         filePicker.preferredSize = Dimension(400, 400)
         // ビューア
         fileViewer.preferredSize = Dimension(600, 400)

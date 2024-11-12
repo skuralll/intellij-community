@@ -154,7 +154,7 @@ class JavaToKotlinAction : AnAction() {
 
             }
 
-            if(!Previewer(project, project.guessProjectDir()!!, newFiles).showAndGet()){
+            if(!Previewer(project, project.guessProjectDir()!!, javaFiles, newFiles).showAndGet()){
                 UndoManager.getInstance(project).undo(null)
             }
 
