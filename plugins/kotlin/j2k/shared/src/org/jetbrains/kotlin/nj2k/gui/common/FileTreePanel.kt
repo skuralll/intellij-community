@@ -123,7 +123,7 @@ open class FileTreePanel(
     }
 
     // 指定したファイルのノードを展開
-    protected fun expandFilesNodes(files: List<VirtualFile>) {
+    fun expandFilesNodes(files: List<VirtualFile>) {
         expandNodes(files)
     }
 

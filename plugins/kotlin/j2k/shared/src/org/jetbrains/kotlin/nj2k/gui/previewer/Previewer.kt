@@ -31,6 +31,7 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
         fileExplorer.setActiveAllNodes(false)
         fileExplorer.setActiveFilesNodes(ktFiles.map { it.virtualFile }, true)
         fileExplorer.fileSelectionListeners.add(this)
+        fileExplorer.expandFilesNodes(ktFiles.map { it.virtualFile })
         // diff
         diffView = SourceDiffPanel(project, rootFile)
         init()
