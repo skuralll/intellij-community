@@ -8,8 +8,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiJavaFile
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.dsl.builder.Align
+import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.util.ui.JBFont
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
 import org.jetbrains.kotlin.nj2k.gui.common.FileTreeListener
 import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
@@ -44,6 +47,13 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
         diffView.preferredSize = Dimension(800, 600)
         // パネル作成
         return panel {
+            row {
+                cell(JBLabel(KotlinBundle.message("action.j2k.gui.preview.header")).apply { font = JBFont.h3().asBold() })
+            }
+            row {
+                label(KotlinBundle.message("action.j2k.gui.preview.description"))
+                bottomGap(BottomGap.SMALL)
+            }
             row {
                 cell(fileExplorer).align(Align.FILL).resizableColumn()
                 cell(diffView).align(Align.FILL)
