@@ -26,8 +26,6 @@ class SourceViewPanel(document: Document?, project: Project, fileType: FileType)
     private val sourceViewer: SourceViewField = SourceViewField(document, project, fileType, true)
 
     init {
-        // ラベル
-        //add(JBLabel("This is test"), BorderLayout.NORTH)
         // コードビューア, リサイズさせるためにCENTERに配置
         add(sourceViewer, BorderLayout.CENTER)
     }
@@ -37,7 +35,7 @@ class SourceViewPanel(document: Document?, project: Project, fileType: FileType)
         sourceViewer.switchFile(file)
     }
 
-    // ラベル付きのパネルを取得
+    // ラベル付きのパネルを取得 (レイアウトが崩れないようにするため、DSLを用いた専用のメソッドを用意した)
     fun getLabeledPanel(): JComponent {
         return panel {
             row { label }
