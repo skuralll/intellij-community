@@ -57,7 +57,7 @@ class FilePicker(
             }
             row {
                 cell(filePicker).align(Align.FILL).resizableColumn()
-                cell(fileViewer).align(Align.FILL)
+                cell(fileViewer.getLabeledPanel()).align(Align.FILL)
             }.resizableRow()
             row {
                 cell(fileCounter)
