@@ -7,17 +7,13 @@ import com.intellij.openapi.ui.Splitter
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.components.JBPanel
 import org.jetbrains.kotlin.nj2k.gui.common.SourceViewField
-import org.jetbrains.kotlin.nj2k.gui.filepicker.SourceViewPanel
 import java.awt.BorderLayout
 
 class SourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel<*>>(BorderLayout()) {
 
     // ソースビューア
-    //val beforeViewer = SourceViewField(null, project, FileTypeManager.getInstance().getFileTypeByExtension("java"), true)
-    //val afterViewer = SourceViewField(null, project, FileTypeManager.getInstance().getFileTypeByExtension("kt"), true)
-    // ソースビューア
-    val beforeViewer = SourceViewPanel(null, project, FileTypeManager.getInstance().getFileTypeByExtension("java"))
-    val afterViewer = SourceViewPanel(null, project, FileTypeManager.getInstance().getFileTypeByExtension("kt"))
+    val beforeViewer = SourceViewField(null, project, FileTypeManager.getInstance().getFileTypeByExtension("java"), true)
+    val afterViewer = SourceViewField(null, project, FileTypeManager.getInstance().getFileTypeByExtension("kt"), true)
 
     init {
         // Splitterを使って横に分割表示

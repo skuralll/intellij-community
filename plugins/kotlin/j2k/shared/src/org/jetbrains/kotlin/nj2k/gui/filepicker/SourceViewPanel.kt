@@ -1,9 +1,7 @@
 // Copyright 2000-2024 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package org.jetbrains.kotlin.nj2k.gui.filepicker
 
-import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -33,10 +31,6 @@ class SourceViewPanel(document: Document?, project: Project, fileType: FileType)
     }
 
     // ファイル切り替えメソッド
-    fun switchFile(document: Document?, fileType: FileType) {
-        sourceViewer.switchFile(document, fileType)
-    }
-
     fun switchFile(file: VirtualFile) {
         sourceViewer.switchFile(file)
     }
