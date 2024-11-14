@@ -14,13 +14,14 @@ import org.jetbrains.kotlin.nj2k.gui.common.SourceViewField
 import java.awt.BorderLayout
 import javax.swing.JComponent
 
-class SourceViewPanel(project: Project, document: Document?, fileType: FileType) : JBPanel<JBPanel<*>>(BorderLayout()) {
+class SourceViewPanel(document: Document?, project: Project, fileType: FileType) : JBPanel<JBPanel<*>>(BorderLayout()) {
 
     // VirtualFileから作成するためのセカンダリコンストラクタ
-    constructor(project: Project, file: VirtualFile) : this(project, file.findDocument(), file.fileType)
+    constructor(project: Project, file: VirtualFile) : this(file.findDocument(), project, file.fileType)
 
     // ラベル
     val label = JBLabel(" ")
+
     // エディタ
     private val sourceViewer: SourceViewField = SourceViewField(document, project, fileType, true)
 
@@ -37,7 +38,7 @@ class SourceViewPanel(project: Project, document: Document?, fileType: FileType)
     }
 
     // ラベル付きのパネルを取得
-    fun getLabeledPanel() : JComponent {
+    fun getLabeledPanel(): JComponent {
         return panel {
             row { label }
             row { cell(this@SourceViewPanel).align(Align.FILL) }
