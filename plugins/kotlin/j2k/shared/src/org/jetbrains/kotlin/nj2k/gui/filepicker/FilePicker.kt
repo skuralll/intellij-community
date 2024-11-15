@@ -2,7 +2,6 @@
 package org.jetbrains.kotlin.nj2k.gui.filepicker
 
 import com.intellij.ide.highlighter.JavaFileType
-import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
@@ -16,7 +15,6 @@ import com.intellij.util.ui.JBFont
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
 import org.jetbrains.kotlin.nj2k.gui.common.FileTreeListener
 import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
-import org.jetbrains.kotlin.nj2k.gui.common.SourceViewField
 import java.awt.Dimension
 import javax.swing.JComponent
 import javax.swing.UIManager
@@ -57,7 +55,7 @@ class FilePicker(
             }
             row {
                 cell(filePicker).align(Align.FILL).resizableColumn()
-                cell(fileViewer.getLabeledPanel()).align(Align.FILL)
+                cell(fileViewer).align(Align.FILL)
             }.resizableRow()
             row {
                 cell(fileCounter)

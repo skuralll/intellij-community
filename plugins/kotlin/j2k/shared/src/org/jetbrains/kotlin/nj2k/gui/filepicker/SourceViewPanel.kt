@@ -35,11 +35,19 @@ class SourceViewPanel(document: Document?, project: Project, fileType: FileType)
         sourceViewer.switchFile(file)
     }
 
+    fun switchFile(document: Document?, fileType: FileType) {
+        sourceViewer.switchFile(document, fileType)
+    }
+
     // ラベル付きのパネルを取得 (レイアウトが崩れないようにするため、DSLを用いた専用のメソッドを用意した)
     fun getLabeledPanel(): JComponent {
         return panel {
-            row { label }
-            row { cell(this@SourceViewPanel).align(Align.FILL) }
+            row { cell(label) }
+            row {
+                cell(this@SourceViewPanel)
+                    .align(Align.FILL)
+                    .resizableColumn()
+            }.resizableRow()
         }
     }
 }
