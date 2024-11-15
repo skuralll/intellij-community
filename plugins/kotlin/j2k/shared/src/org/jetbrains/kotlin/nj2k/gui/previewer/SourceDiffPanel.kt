@@ -19,8 +19,8 @@ class SourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel
 
     override fun setPreferredSize(preferredSize: Dimension?) {
         super.setPreferredSize(preferredSize)
-        super.setMinimumSize(Dimension(800, 600))
-        super.setMaximumSize(Dimension(800, 600))
+        super.setMinimumSize(preferredSize)
+        super.setMaximumSize(preferredSize)
     }
 
     init {
