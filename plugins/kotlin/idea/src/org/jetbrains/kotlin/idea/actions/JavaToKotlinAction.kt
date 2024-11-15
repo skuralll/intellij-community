@@ -254,7 +254,6 @@ class JavaToKotlinAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = CommonDataKeys.PROJECT.getData(e.dataContext) ?: return
         val module = e.getData(PlatformCoreDataKeys.MODULE) ?: return
-        Previewer(project, project.guessProjectDir()!!, emptyList(), emptyList()).showAndGet()
         val javaFiles = showDialogAndGetTargetFiles(e)
         if (javaFiles.isEmpty()) {
             showNothingToConvertErrorMessage(project)
