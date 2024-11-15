@@ -35,11 +35,13 @@ class SourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel
     // 変換前情報をセット
     fun setBefore(document: Document?, fileType: FileType){
         beforeViewer.switchFile(document, fileType)
+        beforeViewer.label.icon = fileType.icon
     }
 
     // 変換後情報をセット
     fun setAfter(document: Document?, fileType: FileType){
         afterViewer.switchFile(document, fileType)
+        afterViewer.label.icon = fileType.icon
     }
 
 }
