@@ -8,10 +8,14 @@ import com.intellij.openapi.vfs.isFile
 import com.intellij.ui.CheckboxTree
 import com.intellij.ui.CheckboxTreeListener
 import com.intellij.ui.CheckedTreeNode
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.dsl.builder.Align
+import com.intellij.ui.dsl.builder.panel
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
+import javax.swing.JComponent
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
@@ -25,6 +29,9 @@ open class FileTreePanel(
     protected val tree: CheckboxTree
     protected val rootNode: CheckedTreeNode
     val fileSelectionListeners = mutableListOf<FileTreeListener>()
+
+    // ラベル
+    val label = JBLabel(" ")
 
     init {
         // ツリー構築
@@ -150,6 +157,18 @@ open class FileTreePanel(
                 parent.isEnabled = false
                 deactivateParent(parent)
             }
+        }
+    }
+
+    // ラベル付きパネルを取得
+    fun getLabeledPanel(): JComponent {
+        return panel {
+            row { cell(label) }
+            row {
+                cell(this@FileTreePanel)
+                    .align(Align.FILL)
+                    .resizableColumn()
+            }.resizableRow()
         }
     }
 

@@ -54,6 +54,7 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
                 label(KotlinBundle.message("action.j2k.gui.preview.description"))
                 bottomGap(BottomGap.SMALL)
             }
+            //separator()
             row {
                 cell(fileExplorer).align(Align.FILL).resizableColumn()
                 cell(diffView).align(Align.FILL)
