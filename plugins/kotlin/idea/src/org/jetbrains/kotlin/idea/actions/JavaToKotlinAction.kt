@@ -3,6 +3,7 @@
 package org.jetbrains.kotlin.idea.actions
 
 import com.intellij.codeInsight.navigation.activateFileWithPsiElement
+import com.intellij.history.LocalHistory
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.ide.scratch.ScratchFileService
 import com.intellij.ide.scratch.ScratchRootType
@@ -11,6 +12,7 @@ import com.intellij.openapi.actionSystem.ActionPlaces.PROJECT_VIEW_POPUP
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
+import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
@@ -50,6 +52,7 @@ import org.jetbrains.kotlin.j2k.*
 import org.jetbrains.kotlin.j2k.ConverterSettings.Companion.defaultSettings
 import org.jetbrains.kotlin.j2k.J2kConverterExtension.Kind.*
 import org.jetbrains.kotlin.nj2k.gui.filepicker.FilePicker
+import org.jetbrains.kotlin.nj2k.gui.previewer.Previewer
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
 import java.io.IOException
@@ -117,6 +120,7 @@ class JavaToKotlinAction : AnAction() {
             //
             // "Global" means that you can undo it from any changed file: the converted files,
             // or the external files that were updated.
+            val snapShot = LocalHistory.getInstance().startAction("J2K-Conversion") // この時点からスナップショットを開始
             project.executeCommand(KotlinBundle.message("action.j2k.task.name")) {
                 if (!ProgressManager.getInstance().runProcessWithProgressSynchronously(
                         { convertWithStatistics() },
@@ -148,6 +152,11 @@ class JavaToKotlinAction : AnAction() {
                         FileEditorManager.getInstance(project).openFile(it.virtualFile, /* focusEditor = */ true)
                     }
                 }
+            }
+            snapShot.finish() // スナップショット保存
+
+            if(!Previewer(project, project.guessProjectDir()!!, javaFiles, newFiles).showAndGet()){
+                UndoManager.getInstance(project).undo(null)
             }
 
             return newFiles
