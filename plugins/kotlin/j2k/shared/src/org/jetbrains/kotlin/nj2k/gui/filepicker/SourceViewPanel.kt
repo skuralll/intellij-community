@@ -3,6 +3,8 @@ package org.jetbrains.kotlin.nj2k.gui.filepicker
 
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileTypes.FileType
+import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.findDocument
@@ -16,8 +18,8 @@ import javax.swing.JComponent
 
 class SourceViewPanel(document: Document?, project: Project, fileType: FileType) : JBPanel<JBPanel<*>>(BorderLayout()) {
 
-    // VirtualFileから作成するためのセカンダリコンストラクタ
-    constructor(project: Project, file: VirtualFile) : this(file.findDocument(), project, file.fileType)
+    // Projectから作成するためのセカンダリコンストラクタ
+    constructor(project: Project) : this(null, project, PlainTextFileType.INSTANCE)
 
     // ラベル
     val label = JBLabel(" ")

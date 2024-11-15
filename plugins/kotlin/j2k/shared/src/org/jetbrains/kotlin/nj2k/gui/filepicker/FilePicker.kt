@@ -26,7 +26,7 @@ class FilePicker(
 ) : DialogWrapper(true), FileTreeListener {
 
     private val filePicker = JKFileTreePanel(rootFile, convertFiles, true)
-    private val fileViewer = SourceViewPanel(project, rootFile)
+    private val fileViewer = SourceViewPanel(project)
     private val fileCounter = JBLabel(KotlinBundle.message("action.j2k.gui.file_picker.file_counter", getFileCount(convertFiles))).apply {
         font = JBFont.medium()
         foreground = UIManager.getColor("Component.infoForeground")

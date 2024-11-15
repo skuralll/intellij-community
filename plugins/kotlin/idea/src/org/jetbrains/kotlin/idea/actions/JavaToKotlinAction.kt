@@ -3,6 +3,7 @@
 package org.jetbrains.kotlin.idea.actions
 
 import com.intellij.codeInsight.navigation.activateFileWithPsiElement
+import com.intellij.history.LocalHistory
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.ide.scratch.ScratchFileService
 import com.intellij.ide.scratch.ScratchRootType
@@ -119,6 +120,7 @@ class JavaToKotlinAction : AnAction() {
             //
             // "Global" means that you can undo it from any changed file: the converted files,
             // or the external files that were updated.
+            val snapShot = LocalHistory.getInstance().startAction("J2K-Conversion") // この時点からスナップショットを開始
             project.executeCommand(KotlinBundle.message("action.j2k.task.name")) {
                 if (!ProgressManager.getInstance().runProcessWithProgressSynchronously(
                         { convertWithStatistics() },
@@ -150,9 +152,8 @@ class JavaToKotlinAction : AnAction() {
                         FileEditorManager.getInstance(project).openFile(it.virtualFile, /* focusEditor = */ true)
                     }
                 }
-
-
             }
+            snapShot.finish() // スナップショット保存
 
             if(!Previewer(project, project.guessProjectDir()!!, javaFiles, newFiles).showAndGet()){
                 UndoManager.getInstance(project).undo(null)

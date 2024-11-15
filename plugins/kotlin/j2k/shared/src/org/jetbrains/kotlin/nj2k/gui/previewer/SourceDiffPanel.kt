@@ -2,12 +2,14 @@
 package org.jetbrains.kotlin.nj2k.gui.previewer
 
 import com.intellij.icons.AllIcons
+import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.components.JBPanel
+import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.nj2k.gui.filepicker.SourceViewPanel
 import java.awt.Dimension
 import java.awt.GridLayout
@@ -16,8 +18,8 @@ import javax.swing.Icon
 class SourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel<*>>(GridLayout(1, 2)) {
 
     // ソースビューア
-    private val beforeViewer = SourceViewPanel(null, project, FileTypeManager.getInstance().getFileTypeByExtension("java"))
-    private val afterViewer = SourceViewPanel(null, project, FileTypeManager.getInstance().getFileTypeByExtension("kt"))
+    private val beforeViewer = SourceViewPanel(null, project, JavaFileType.INSTANCE)
+    private val afterViewer = SourceViewPanel(null, project, KotlinFileType.INSTANCE)
 
     override fun setPreferredSize(preferredSize: Dimension?) {
         super.setPreferredSize(preferredSize)

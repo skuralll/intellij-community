@@ -2,6 +2,9 @@
 package org.jetbrains.kotlin.nj2k.gui.common
 
 import com.intellij.openapi.application.invokeLater
+import com.intellij.openapi.application.runWriteAction
+import com.intellij.openapi.command.CommandProcessor
+import com.intellij.openapi.command.UndoConfirmationPolicy
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ScrollType
@@ -37,13 +40,19 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
 
     // ファイル切り替えメソッド
     fun switchFile(document: Document?, fileType: FileType) {
-        this.document = document ?: getEmptyDocument()
-        this.fileType = fileType
-        // カーソル位置を戦闘に戻す
-        invokeLater {
-            setCaretPosition(0)
-            editor?.scrollingModel?.scrollToCaret(ScrollType.RELATIVE)
-        }
+        CommandProcessor.getInstance().executeCommand(project, {
+            CommandProcessor.getInstance().runUndoTransparentAction {
+                runWriteAction {
+                    this.document.setText(document?.text ?: "")
+                    this.fileType = fileType
+                }
+            }
+            // カーソル位置を戦闘に戻す
+            invokeLater {
+                setCaretPosition(0)
+                editor?.scrollingModel?.scrollToCaret(ScrollType.RELATIVE)
+            }
+        }, "SwitchFile", null, UndoConfirmationPolicy.DO_NOT_REQUEST_CONFIRMATION)
     }
 
     fun switchFile(file: VirtualFile) {
