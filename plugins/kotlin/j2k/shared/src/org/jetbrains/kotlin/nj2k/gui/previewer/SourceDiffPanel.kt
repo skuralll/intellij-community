@@ -26,7 +26,9 @@ class SourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel
     init {
         // ラベル設定
         beforeViewer.label.text = "Before"
+        beforeViewer.label.icon = AllIcons.FileTypes.Any_type
         afterViewer.label.text = "After"
+        afterViewer.label.icon = AllIcons.FileTypes.Any_type
         // 追加
         add(beforeViewer.getLabeledPanel())
         add(afterViewer.getLabeledPanel())

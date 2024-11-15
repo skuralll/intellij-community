@@ -3,6 +3,7 @@ package org.jetbrains.kotlin.nj2k.gui.previewer
 
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.openapi.fileTypes.FileTypes
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
@@ -66,8 +67,8 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
 
     override fun onFocus(file: VirtualFile) {
         // 初期化
-        diffView.setBefore(null, FileTypeManager.getInstance().getFileTypeByExtension("java"))
-        diffView.setAfter(null, FileTypeManager.getInstance().getFileTypeByExtension("kt"))
+        diffView.setBefore(null, FileTypes.UNKNOWN)
+        diffView.setAfter(null, FileTypes.UNKNOWN)
         // ファイル切り替え
         diffView.setAfter(file.findDocument(), file.fileType)
         javaFiles.firstOrNull{ it.virtualFile.equals(file) }?.let {
