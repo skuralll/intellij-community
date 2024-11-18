@@ -15,7 +15,6 @@ import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBFont
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
-import org.jetbrains.kotlin.idea.util.isJavaFileType
 import org.jetbrains.kotlin.nj2k.gui.common.FileTreeListener
 import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
 import org.jetbrains.kotlin.psi.KtFile
