@@ -37,6 +37,7 @@ class FilePicker(
         title = KotlinBundle.message("action.j2k.gui.title")
         filePicker.enableKotlin = false
         filePicker.fileSelectionListeners.add(this)
+        convertFiles.firstOrNull { it.isJavaFileType() }?.let { fileViewer.switchFile(it) } // 最初のファイルを初期表示
         init()
     }
 
@@ -45,7 +46,6 @@ class FilePicker(
         filePicker.preferredSize = Dimension(400, 400)
         // ビューア
         fileViewer.preferredSize = Dimension(600, 400)
-        convertFiles.firstOrNull { it.isJavaFileType() }?.let { fileViewer.switchFile(it) } // 最初のファイルを初期表示
         // パネル作成
         return panel {
             row {
