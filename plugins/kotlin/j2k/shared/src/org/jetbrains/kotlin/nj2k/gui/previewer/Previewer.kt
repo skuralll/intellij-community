@@ -15,6 +15,7 @@ import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBFont
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
+import org.jetbrains.kotlin.idea.util.isJavaFileType
 import org.jetbrains.kotlin.nj2k.gui.common.FileTreeListener
 import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
 import org.jetbrains.kotlin.psi.KtFile
@@ -46,6 +47,7 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
         fileExplorer.preferredSize = Dimension(400, 600)
         // Diff
         diffView.preferredSize = Dimension(800, 600)
+        ktFiles.firstOrNull()?.let { switchFile(it.virtualFile) } // 最初のファイルを初期表示
         // パネル作成
         return panel {
             row {
@@ -66,6 +68,11 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
     override fun onFilePick(selectedFiles: List<VirtualFile>) {}
 
     override fun onFocus(file: VirtualFile) {
+        switchFile(file)
+    }
+
+    // 対象のファイルを切り替える
+    private fun switchFile(file: VirtualFile) {
         // 初期化
         diffView.setBefore(null, FileTypes.UNKNOWN)
         diffView.setAfter(null, FileTypes.UNKNOWN)
@@ -75,4 +82,5 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
             diffView.setBefore(EditorFactory.getInstance().createDocument(it.text), FileTypeManager.getInstance().getFileTypeByExtension("java"))
         }
     }
+
 }
