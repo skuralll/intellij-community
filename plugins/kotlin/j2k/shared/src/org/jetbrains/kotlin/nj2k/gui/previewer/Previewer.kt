@@ -39,7 +39,10 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
         fileExplorer.expandFilesNodes(ktFiles.map { it.virtualFile })
         // diff
         diffView = SourceDiffPanel(project, rootFile)
-        ktFiles.firstOrNull()?.let { switchFile(it.virtualFile) } // 最初のファイルを初期表示
+        ktFiles.firstOrNull()?.let {
+            fileExplorer.focusFile(it.virtualFile) // 最初のファイルにフォーカスする
+            switchFile(it.virtualFile) // 最初のファイルを初期表示
+        }
         init()
     }
 
