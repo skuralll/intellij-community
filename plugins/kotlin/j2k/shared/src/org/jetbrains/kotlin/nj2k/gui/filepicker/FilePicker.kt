@@ -13,6 +13,7 @@ import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBFont
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
+import org.jetbrains.kotlin.idea.util.isJavaFileType
 import org.jetbrains.kotlin.nj2k.gui.common.FileTreeListener
 import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
 import java.awt.Dimension
@@ -44,6 +45,7 @@ class FilePicker(
         filePicker.preferredSize = Dimension(400, 400)
         // ビューア
         fileViewer.preferredSize = Dimension(600, 400)
+        convertFiles.firstOrNull { it.isJavaFileType() }?.let { fileViewer.switchFile(it) } // 最初のファイルを初期表示
         // パネル作成
         return panel {
             row {
