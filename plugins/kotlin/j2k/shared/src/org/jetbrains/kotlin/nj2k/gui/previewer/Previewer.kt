@@ -38,6 +38,10 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
         fileExplorer.expandFilesNodes(ktFiles.map { it.virtualFile })
         // diff
         diffView = SourceDiffPanel(project, rootFile)
+        ktFiles.firstOrNull()?.let {
+            fileExplorer.focusFile(it.virtualFile) // 最初のファイルにフォーカスする
+            switchFile(it.virtualFile) // 最初のファイルを初期表示
+        }
         init()
     }
 
@@ -66,6 +70,11 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
     override fun onFilePick(selectedFiles: List<VirtualFile>) {}
 
     override fun onFocus(file: VirtualFile) {
+        switchFile(file)
+    }
+
+    // 対象のファイルを切り替える
+    private fun switchFile(file: VirtualFile) {
         // 初期化
         diffView.setBefore(null, FileTypes.UNKNOWN)
         diffView.setAfter(null, FileTypes.UNKNOWN)
@@ -75,4 +84,5 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
             diffView.setBefore(EditorFactory.getInstance().createDocument(it.text), FileTypeManager.getInstance().getFileTypeByExtension("java"))
         }
     }
+
 }

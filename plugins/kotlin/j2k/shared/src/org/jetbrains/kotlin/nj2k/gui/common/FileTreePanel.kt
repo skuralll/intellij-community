@@ -160,6 +160,13 @@ open class FileTreePanel(
         }
     }
 
+    // 指定したファイルのノードにフォーカスを当てる
+    fun focusFile(file: VirtualFile) {
+        operateMatchedNodes(rootNode, { it.userObject == file }) {
+            tree.selectionPath = TreePath(it.path)
+        }
+    }
+
     // ラベル付きパネルを取得
     fun getLabeledPanel(): JComponent {
         return panel {

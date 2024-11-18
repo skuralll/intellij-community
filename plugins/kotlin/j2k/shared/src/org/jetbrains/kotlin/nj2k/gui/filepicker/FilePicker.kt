@@ -13,6 +13,7 @@ import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBFont
 import org.jetbrains.kotlin.idea.base.resources.KotlinBundle
+import org.jetbrains.kotlin.idea.util.isJavaFileType
 import org.jetbrains.kotlin.nj2k.gui.common.FileTreeListener
 import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
 import java.awt.Dimension
@@ -36,6 +37,10 @@ class FilePicker(
         title = KotlinBundle.message("action.j2k.gui.title")
         filePicker.enableKotlin = false
         filePicker.fileSelectionListeners.add(this)
+        convertFiles.firstOrNull { it.isJavaFileType() }?.let {
+            filePicker.focusFile(it) // 最初のファイルにフォーカスする
+            fileViewer.switchFile(it) // 最初のファイルを初期表示
+        }
         init()
     }
 
