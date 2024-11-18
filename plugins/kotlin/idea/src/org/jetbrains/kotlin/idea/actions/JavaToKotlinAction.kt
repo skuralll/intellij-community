@@ -48,6 +48,7 @@ import org.jetbrains.kotlin.idea.statistics.ConversionType
 import org.jetbrains.kotlin.idea.statistics.J2KFusCollector
 import org.jetbrains.kotlin.idea.util.application.executeCommand
 import org.jetbrains.kotlin.idea.util.getAllFilesRecursively
+import org.jetbrains.kotlin.idea.util.isKotlinFileType
 import org.jetbrains.kotlin.j2k.*
 import org.jetbrains.kotlin.j2k.ConverterSettings.Companion.defaultSettings
 import org.jetbrains.kotlin.j2k.J2kConverterExtension.Kind.*
@@ -126,7 +127,8 @@ class JavaToKotlinAction : AnAction() {
                         { convertWithStatistics() },
                         title, /* canBeCanceled = */ true,
                         project
-                    )) return@executeCommand
+                    )
+                ) return@executeCommand
 
                 val result = converterResult ?: return@executeCommand
                 val externalCodeProcessing = result.externalCodeProcessing
@@ -155,8 +157,10 @@ class JavaToKotlinAction : AnAction() {
             }
             snapShot.finish() // スナップショット保存
 
-            if(!Previewer(project, project.guessProjectDir()!!, javaFiles, newFiles).showAndGet()){
+            // 完全な変換/Undoが行われるまでプレビューを表示し続ける
+            while (!Previewer(project, project.guessProjectDir()!!, javaFiles, newFiles).showAndGet()) {
                 UndoManager.getInstance(project).undo(null)
+                if (!isConverted(newFiles)) break // Undoがキャンセルされた場合ループ継続
             }
 
             return newFiles
@@ -167,10 +171,11 @@ class JavaToKotlinAction : AnAction() {
 
             var result: (() -> Unit)? = null
             ProgressManager.getInstance().runProcessWithProgressSynchronously({
-                runReadAction {
-                    result = processing.prepareWriteOperation(ProgressManager.getInstance().progressIndicator!!)
-                }
-            }, title, /* canBeCanceled = */ true, project)
+                                                                                  runReadAction {
+                                                                                      result =
+                                                                                          processing.prepareWriteOperation(ProgressManager.getInstance().progressIndicator!!)
+                                                                                  }
+                                                                              }, title, /* canBeCanceled = */ true, project)
 
             return result
         }
@@ -282,14 +287,14 @@ class JavaToKotlinAction : AnAction() {
     //        .toList()
     //}
 
-    private fun showDialogAndGetTargetFiles(e: AnActionEvent): List<PsiJavaFile>{
+    private fun showDialogAndGetTargetFiles(e: AnActionEvent): List<PsiJavaFile> {
         val project = e.project ?: return emptyList()
         val rootFile = project.guessProjectDir() ?: return emptyList()
-        val preselectedVirtualFiles = e.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)?.let{
+        val preselectedVirtualFiles = e.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)?.let {
             getAllFilesRecursively(it)
         } ?: return emptyList()
         val dialog = FilePicker(project, rootFile, preselectedVirtualFiles.toMutableList())
-        if(!dialog.showAndGet()) return emptyList()
+        if (!dialog.showAndGet()) return emptyList()
         return dialog.getPickedFiles().asSequence()
             .mapNotNull { PsiManager.getInstance(project).findFile(it) as? PsiJavaFile }
             .filter { it.fileType == JavaFileType.INSTANCE } // skip .jsp files
@@ -364,4 +369,10 @@ private fun getJ2kKind(forceUsingOldJ2k: Boolean = false): J2kConverterExtension
     isK2Mode() -> K2
     forceUsingOldJ2k || !NewJ2k.isEnabled -> K1_OLD
     else -> K1_NEW
+}
+
+// JavaファイルとKotlinファイルのリストを受け取り、変換が行われたかどうかを取得する
+private fun isConverted(ktFiles: List<KtFile>): Boolean {
+    val compareFile = ktFiles.firstOrNull() ?: return false
+    return compareFile.virtualFile.isKotlinFileType()
 }
