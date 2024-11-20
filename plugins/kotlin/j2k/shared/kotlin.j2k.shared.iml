@@ -48,5 +48,9 @@
     <orderEntry type="module" module-name="intellij.platform.core.ui" />
     <!-- メッセージを扱うために追加 -->
     <orderEntry type="module" module-name="kotlin.base.resources" />
+    <!-- Jsonを扱うために追加 -->
+    <orderEntry type="library" name="kotlinx-serialization-core" level="project" />
+    <orderEntry type="library" name="kotlinx-serialization-json" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="kotlinc.kotlinx-serialization-compiler-plugin" level="project" />
   </component>
 </module>
