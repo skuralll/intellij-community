@@ -54,6 +54,7 @@ import org.jetbrains.kotlin.j2k.ConverterSettings.Companion.defaultSettings
 import org.jetbrains.kotlin.j2k.J2kConverterExtension.Kind.*
 import org.jetbrains.kotlin.nj2k.gui.filepicker.FilePicker
 import org.jetbrains.kotlin.nj2k.gui.previewer.Previewer
+import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
 import java.io.IOException
@@ -121,6 +122,7 @@ class JavaToKotlinAction : AnAction() {
             //
             // "Global" means that you can undo it from any changed file: the converted files,
             // or the external files that were updated.
+            ConversionRecorder.clear() // 変換内容記録用のリストをクリア
             val snapShot = LocalHistory.getInstance().startAction("J2K-Conversion") // この時点からスナップショットを開始
             project.executeCommand(KotlinBundle.message("action.j2k.task.name")) {
                 if (!ProgressManager.getInstance().runProcessWithProgressSynchronously(
@@ -162,6 +164,12 @@ class JavaToKotlinAction : AnAction() {
                 UndoManager.getInstance(project).undo(null)
                 if (!isConverted(newFiles)) break // Undoがキャンセルされた場合ループ継続
             }
+
+            // 変換されていたらログ出力
+            if (isConverted(newFiles)) {
+                ConversionRecorder.output() // 変換内容を出力
+            }
+            ConversionRecorder.clear()
 
             return newFiles
         }
