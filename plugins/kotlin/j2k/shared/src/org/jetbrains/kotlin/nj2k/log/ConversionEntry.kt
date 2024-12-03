@@ -16,6 +16,7 @@ sealed class ConversionEntry{
     abstract val ktFq : String
 }
 
+// const修飾子追加
 @Serializable
 data class ConstModifierEntry(
     override val file: String,
@@ -23,3 +24,14 @@ data class ConstModifierEntry(
     override val javaFq : String,
     override val ktFq : String
 ) : ConversionEntry()
+
+// コンストラクタ変換
+@Serializable
+data class ConstructorEntry(
+    override val file: String,
+    override val range: ConversionRange,
+    override val javaFq : String,
+    override val ktFq : String
+) : ConversionEntry()
+
+//

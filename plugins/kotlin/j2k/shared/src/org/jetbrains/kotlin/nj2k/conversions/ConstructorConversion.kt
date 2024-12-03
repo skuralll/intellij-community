@@ -5,6 +5,8 @@ package org.jetbrains.kotlin.nj2k.conversions
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
 import org.jetbrains.kotlin.nj2k.RecursiveConversion
+import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
+import org.jetbrains.kotlin.nj2k.log.ConversionType
 import org.jetbrains.kotlin.nj2k.tree.*
 
 class ConstructorConversion(context: NewJ2kConverterContext) : RecursiveConversion(context) {
@@ -16,6 +18,11 @@ class ConstructorConversion(context: NewJ2kConverterContext) : RecursiveConversi
 
         element.invalidate()
         val delegationCall = lookupDelegationCall(element.block) ?: JKStubExpression()
+
+        // logging
+        element.psi?.let {
+            ConversionRecorder.add(it, ConversionType.CONSTRUCTOR)
+        }
 
         return JKConstructorImpl(
             element.name,
