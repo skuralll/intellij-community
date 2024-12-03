@@ -123,6 +123,7 @@ class JavaToKotlinAction : AnAction() {
             // "Global" means that you can undo it from any changed file: the converted files,
             // or the external files that were updated.
             ConversionRecorder.clear() // 変換内容記録用のリストをクリア
+            ConversionRecorder.project = project // プロジェクトを設定
             val snapShot = LocalHistory.getInstance().startAction("J2K-Conversion") // この時点からスナップショットを開始
             project.executeCommand(KotlinBundle.message("action.j2k.task.name")) {
                 if (!ProgressManager.getInstance().runProcessWithProgressSynchronously(
