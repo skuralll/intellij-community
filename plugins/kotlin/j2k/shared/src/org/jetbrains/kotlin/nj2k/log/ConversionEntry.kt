@@ -8,4 +8,4 @@ import kotlinx.serialization.Serializable
 data class ConversionRange(val start : Int, val end : Int)
 // 変換内容エントリ
 @Serializable
-data class ConversionEntry(val file : String, val range : ConversionRange, val javaFq : String, val ktFq : String, val details : String)
+data class ConversionEntry(val file : String, val range : ConversionRange, val javaFq : String, val ktFq : String, val type : String)

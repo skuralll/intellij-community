@@ -55,7 +55,7 @@ object ConversionRecorder {
             ConversionRange(psiElement.textRange.startOffset, psiElement.textRange.endOffset),
             getJavaFqName(psiElement),
             getKotlinFqName(psiElement),
-            ""
+            type.id
         )
         entries.add(entry)
     }
