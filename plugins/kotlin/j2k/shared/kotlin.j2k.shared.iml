@@ -12,6 +12,14 @@
             <stringArg name="apiVersion" arg="2.0" />
             <stringArg name="languageVersion" arg="2.0" />
           </stringArguments>
+          <arrayArguments>
+            <arrayArg name="pluginClasspaths">
+              <args>
+                $KOTLIN_BUNDLED$/lib/kotlinx-serialization-compiler-plugin.jar
+              </args>
+            </arrayArg>
+            <arrayArg name="pluginOptions" />
+          </arrayArguments>
         </compilerArguments>
       </configuration>
     </facet>
@@ -44,13 +52,11 @@
     <orderEntry type="module" module-name="intellij.platform.core" />
     <orderEntry type="module" module-name="intellij.platform.util" />
     <orderEntry type="module" module-name="kotlin.project-configuration" />
-    <!-- GUIを作成するために追加 -->
     <orderEntry type="module" module-name="intellij.platform.core.ui" />
-    <!-- メッセージを扱うために追加 -->
     <orderEntry type="module" module-name="kotlin.base.resources" />
-    <!-- Jsonを扱うために追加 -->
+    <orderEntry type="library" scope="PROVIDED" name="kotlinc.kotlinx-serialization-compiler-plugin" level="project" />
     <orderEntry type="library" name="kotlinx-serialization-core" level="project" />
     <orderEntry type="library" name="kotlinx-serialization-json" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="kotlinc.kotlinx-serialization-compiler-plugin" level="project" />
+    <orderEntry type="library" name="jackson-databind" level="project" />
   </component>
 </module>
