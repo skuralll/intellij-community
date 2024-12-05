@@ -25,6 +25,9 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
+// Whether to delete labels (for debugging)
+private const val doDeleteLabel : Boolean = false
+
 private val errorsFixingDiagnosticBasedPostProcessingGroup = DiagnosticBasedPostProcessingGroup(
     diagnosticBasedProcessing(MissingIteratorExclExclFixFactory, Errors.ITERATOR_ON_NULLABLE),
     diagnosticBasedProcessing(SmartCastImpossibleExclExclFixFactory, Errors.SMARTCAST_IMPOSSIBLE),
@@ -118,16 +121,16 @@ private val cleaningUpDiagnosticBasedPostProcessingGroup = DiagnosticBasedPostPr
 
 private val inferringTypesPostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.inferring.types"),
-    listOf(
+    listOfNotNull(
         NullabilityInferenceProcessing(),
         MutabilityInferenceProcessing(),
-        ClearUnknownInferenceLabelsProcessing()
+        if(doDeleteLabel) ClearUnknownInferenceLabelsProcessing() else null
     )
 )
 
 private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.cleaning.up.code"),
-    listOf(
+    listOfNotNull(
         DiagnosticBasedPostProcessingGroup(
             // We need to remove the redundant projection before `ConvertGettersAndSettersToPropertyProcessing`,
             // so that the property and accessor types wouldn't differ in projections.
@@ -139,7 +142,7 @@ private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
         addOrRemoveModifiersProcessingGroup,
         inspectionLikePostProcessingGroup,
         removeRedundantElementsProcessingGroup,
-        ClearExplicitLabelsProcessing(),
+        if(doDeleteLabel) ClearExplicitLabelsProcessing() else null,
         cleaningUpDiagnosticBasedPostProcessingGroup,
     )
 )
