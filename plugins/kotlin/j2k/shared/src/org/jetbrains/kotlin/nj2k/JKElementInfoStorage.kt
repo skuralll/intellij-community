@@ -64,6 +64,14 @@ class JKElementInfoStorage {
         elementToLabel[element] = label
     }
 
+    // for debugging
+    fun printAllLabels() {
+        elementToLabel.forEach { (element, label) ->
+            println("$element: $label")
+            labelToInfo[label]?.forEach { println("  $it") }
+        }
+    }
+
     companion object {
         private val charPool: List<Char> = ('a'..'z').toList()
         private const val GENERATED_STRING_LENGTH: Int = 6
