@@ -26,7 +26,7 @@ import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 // Whether to delete labels (for debugging)
-private const val doDeleteLabel : Boolean = false
+private const val doDeleteLabel: Boolean = true
 
 private val errorsFixingDiagnosticBasedPostProcessingGroup = DiagnosticBasedPostProcessingGroup(
     diagnosticBasedProcessing(MissingIteratorExclExclFixFactory, Errors.ITERATOR_ON_NULLABLE),
@@ -124,7 +124,6 @@ private val inferringTypesPostProcessingGroup = NamedPostProcessingGroup(
     listOfNotNull(
         NullabilityInferenceProcessing(),
         MutabilityInferenceProcessing(),
-        if(doDeleteLabel) ClearUnknownInferenceLabelsProcessing() else null
     )
 )
 
@@ -142,19 +141,22 @@ private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
         addOrRemoveModifiersProcessingGroup,
         inspectionLikePostProcessingGroup,
         removeRedundantElementsProcessingGroup,
-        if(doDeleteLabel) ClearExplicitLabelsProcessing() else null,
         cleaningUpDiagnosticBasedPostProcessingGroup,
     )
 )
 
 private val optimizingImportsAndFormattingCodePostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.optimizing.imports.and.formatting.code"),
-    listOf(
-        ShortenReferenceProcessing(),
-        OptimizeImportsProcessing(),
-        RemoveRedundantEmptyLinesProcessing(),
-        FormatCodeProcessing()
-    )
+    buildList {
+        add(ShortenReferenceProcessing())
+        add(OptimizeImportsProcessing())
+        add(RemoveRedundantEmptyLinesProcessing())
+        if (doDeleteLabel) {
+            add(ClearUnknownInferenceLabelsProcessing())
+            add(ClearExplicitLabelsProcessing())
+        }
+        add(FormatCodeProcessing())
+    }
 )
 
 internal val allProcessings: List<NamedPostProcessingGroup> = listOf(
