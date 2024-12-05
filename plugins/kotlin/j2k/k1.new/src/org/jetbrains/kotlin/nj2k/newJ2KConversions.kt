@@ -2,6 +2,7 @@
 package org.jetbrains.kotlin.nj2k
 
 import org.jetbrains.kotlin.nj2k.conversions.*
+import org.jetbrains.kotlin.nj2k.log.AddElementsInfoForLogConversion
 import org.jetbrains.kotlin.nj2k.tree.JKLambdaExpression
 import org.jetbrains.kotlin.nj2k.tree.JKParameter
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
@@ -65,5 +66,7 @@ fun getNewJ2KConversions(context: NewJ2kConverterContext): List<Conversion> = li
     RemoveUnnecessaryParenthesesConversion(context),
     AddElementsInfoConversion(context),
     AddConstModifierConversion(context),
-    EnumSyntheticValuesMethodConversion(context)
+    EnumSyntheticValuesMethodConversion(context),
+    // logging
+    AddElementsInfoForLogConversion(context)
 )
