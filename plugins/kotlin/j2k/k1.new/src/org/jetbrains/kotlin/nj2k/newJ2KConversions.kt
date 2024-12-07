@@ -2,7 +2,7 @@
 package org.jetbrains.kotlin.nj2k
 
 import org.jetbrains.kotlin.nj2k.conversions.*
-import org.jetbrains.kotlin.nj2k.log.AddElementsInfoForLogConversion
+import org.jetbrains.kotlin.nj2k.conversions.AddElementsInfoForLogConversion
 import org.jetbrains.kotlin.nj2k.tree.JKLambdaExpression
 import org.jetbrains.kotlin.nj2k.tree.JKParameter
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
