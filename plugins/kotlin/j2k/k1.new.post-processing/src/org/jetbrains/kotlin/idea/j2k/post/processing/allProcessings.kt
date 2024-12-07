@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.j2k.InspectionLikeProcessingGroup
 import org.jetbrains.kotlin.j2k.NamedPostProcessingGroup
 import org.jetbrains.kotlin.j2k.postProcessings.*
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.idea.j2k.post.processing.processings.LoggingProcessing
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtProperty
@@ -26,7 +27,7 @@ import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 // Whether to delete labels (for debugging)
-private const val doDeleteLabel: Boolean = true
+private const val doDeleteLabel: Boolean = false
 
 private val errorsFixingDiagnosticBasedPostProcessingGroup = DiagnosticBasedPostProcessingGroup(
     diagnosticBasedProcessing(MissingIteratorExclExclFixFactory, Errors.ITERATOR_ON_NULLABLE),
@@ -145,6 +146,13 @@ private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
     )
 )
 
+private val loggingPostProcessingGroup = NamedPostProcessingGroup(
+    KotlinNJ2KServicesBundle.message("processing.step.logging"),
+    listOf(
+        LoggingProcessing()
+    )
+)
+
 private val optimizingImportsAndFormattingCodePostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.optimizing.imports.and.formatting.code"),
     buildList {
@@ -162,6 +170,7 @@ private val optimizingImportsAndFormattingCodePostProcessingGroup = NamedPostPro
 internal val allProcessings: List<NamedPostProcessingGroup> = listOf(
     inferringTypesPostProcessingGroup,
     cleaningUpCodePostProcessingGroup,
+    loggingPostProcessingGroup,
     optimizingImportsAndFormattingCodePostProcessingGroup
 )
 

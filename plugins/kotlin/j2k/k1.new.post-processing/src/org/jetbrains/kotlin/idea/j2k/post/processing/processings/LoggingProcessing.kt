@@ -1,0 +1,44 @@
+// Copyright 2000-2024 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
+package org.jetbrains.kotlin.idea.j2k.post.processing.processings
+
+import com.intellij.openapi.application.runReadAction
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementVisitor
+import org.jetbrains.kotlin.analysis.api.KaSession
+import org.jetbrains.kotlin.idea.j2k.post.processing.inference.common.getInfoLabel
+import org.jetbrains.kotlin.j2k.PostProcessing
+import org.jetbrains.kotlin.j2k.PostProcessingApplier
+import org.jetbrains.kotlin.j2k.PostProcessingTarget
+import org.jetbrains.kotlin.j2k.elements
+import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
+import org.jetbrains.kotlin.psi.KtFunction
+
+class LoggingProcessing : PostProcessing {
+    override fun runProcessing(target: PostProcessingTarget, converterContext: NewJ2kConverterContext) {
+        runReadAction {
+            target.elements().forEach { element ->
+                element.accept(LoggingVisitor)
+            }
+        }
+    }
+
+    context(KaSession)
+    override fun computeAppliers(
+        target: PostProcessingTarget,
+        converterContext: NewJ2kConverterContext
+    ): List<PostProcessingApplier> {
+        error("Not supported in K1 J2K")
+    }
+}
+
+// ロギング用Visitor、再帰的に各要素を探索する
+private object LoggingVisitor : PsiElementVisitor() {
+    override fun visitElement(element: PsiElement) {
+        when (element) {
+            is KtFunction -> {
+                println("Function: ${element.name} has label: ${element.nameIdentifier?.getInfoLabel()}")
+            }
+        }
+        element.acceptChildren(this)
+    }
+}

@@ -30,7 +30,7 @@ import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 import org.jetbrains.kotlin.resolve.ImportPath
 
 // Whether to show labels-info (for debugging)
-private val showLabelsInfo = true
+private val showLabelsInfo = false
 
 class NewJavaToKotlinConverter(
     val project: Project,
