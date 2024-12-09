@@ -5,19 +5,21 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.kotlin.analysis.api.KaSession
-import org.jetbrains.kotlin.idea.j2k.post.processing.inference.common.getInfoLabel
+import org.jetbrains.kotlin.idea.j2k.post.processing.inference.common.elementInfo
 import org.jetbrains.kotlin.j2k.PostProcessing
 import org.jetbrains.kotlin.j2k.PostProcessingApplier
 import org.jetbrains.kotlin.j2k.PostProcessingTarget
 import org.jetbrains.kotlin.j2k.elements
 import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
+import org.jetbrains.kotlin.nj2k.log.JKElementInfoForLog
 import org.jetbrains.kotlin.psi.KtFunction
 
 class LoggingProcessing : PostProcessing {
     override fun runProcessing(target: PostProcessingTarget, converterContext: NewJ2kConverterContext) {
         runReadAction {
             target.elements().forEach { element ->
-                element.accept(LoggingVisitor)
+                val visitor = LoggingProcessingVisitor(converterContext)
+                element.accept(visitor)
             }
         }
     }
@@ -31,12 +33,16 @@ class LoggingProcessing : PostProcessing {
     }
 }
 
-// ロギング用Visitor、再帰的に各要素を探索する
-private object LoggingVisitor : PsiElementVisitor() {
+class LoggingProcessingVisitor(val context: NewJ2kConverterContext) : PsiElementVisitor() {
     override fun visitElement(element: PsiElement) {
         when (element) {
             is KtFunction -> {
-                println("Function: ${element.name} has label: ${element.nameIdentifier?.getInfoLabel()}")
+                element.nameIdentifier?.elementInfo(context)?.forEach{
+                    if(it is JKElementInfoForLog){
+                        println(it.javaFq)
+                        // TODO : Add Entry
+                    }
+                }
             }
         }
         element.acceptChildren(this)
