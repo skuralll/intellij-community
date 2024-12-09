@@ -8,11 +8,12 @@ enum class ConversionType {
     // 共有のConversionType
     COMMON{
         override val id = "common"
-        override fun createEntry(file: String): ConversionEntry {
-            return CommonModifierEntry(file)
+        override fun createEntry(file: String, javaFq: String, ktFq: String): ConversionEntry {
+            return CommonModifierEntry(file, javaFq, ktFq)
         }
     };
 
+    // TODO : 変換処理ごとにエントリを追加する
     // const 修飾子の追加
     //ADD_CONST_MODIFIER {
     //    override val id = "add_const_modifier"
@@ -40,6 +41,5 @@ enum class ConversionType {
     //    }
     //}
     abstract val id : String;
-    abstract fun createEntry(file: String): ConversionEntry
-    //abstract fun createEntry(file: String, range: ConversionRange, javaFq: String, ktFq: String, psiElement: PsiElement): ConversionEntry
+    abstract fun createEntry(file: String, javaFq: String, ktFq: String): ConversionEntry
 }

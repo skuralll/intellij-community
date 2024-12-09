@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.j2k.PostProcessingApplier
 import org.jetbrains.kotlin.j2k.PostProcessingTarget
 import org.jetbrains.kotlin.j2k.elements
 import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
+import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
 import org.jetbrains.kotlin.nj2k.log.JKElementInfoForLog
 import org.jetbrains.kotlin.psi.KtFunction
 
@@ -39,8 +40,7 @@ class LoggingProcessingVisitor(val context: NewJ2kConverterContext) : PsiElement
             is KtFunction -> {
                 element.nameIdentifier?.elementInfo(context)?.forEach{
                     if(it is JKElementInfoForLog){
-                        println(it.javaFq)
-                        // TODO : Add Entry
+                        ConversionRecorder.add(it.javaPsi, element)
                     }
                 }
             }

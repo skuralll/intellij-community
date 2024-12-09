@@ -2,7 +2,6 @@
 package org.jetbrains.kotlin.nj2k.conversions
 
 import org.jetbrains.kotlin.analysis.api.KaSession
-import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
 import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
 import org.jetbrains.kotlin.nj2k.RecursiveConversion
 import org.jetbrains.kotlin.nj2k.log.JKElementInfoForLog
@@ -23,7 +22,7 @@ class AddElementsInfoForLogConversion(context: NewJ2kConverterContext) : Recursi
     // メソッドの場合
     private fun addInfoForFunction(function: JKMethod) {
         // nullの場合，明記されていないコンストラクタなどが考えられる
-        context.elementsInfoStorage.addEntry(function, JKElementInfoForLog(function.psi?.kotlinFqName.toString()))
+        context.elementsInfoStorage.addEntry(function, JKElementInfoForLog(function.psi))
     }
 
 }
