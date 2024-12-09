@@ -1,6 +1,7 @@
 // Copyright 2000-2024 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package org.jetbrains.kotlin.nj2k.log
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // 文字列の範囲指定
@@ -16,7 +17,9 @@ sealed class ConversionEntry{
 }
 
 // 共通の変換エントリ
+// TODO : Serializableを変換タイプに応じて追加する
 @Serializable
+@SerialName("common")
 data class CommonModifierEntry(
     override val file: String,
     override val javaFq : String,
