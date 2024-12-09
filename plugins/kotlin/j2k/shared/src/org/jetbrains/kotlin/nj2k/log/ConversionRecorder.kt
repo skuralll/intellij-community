@@ -51,10 +51,11 @@ object ConversionRecorder {
     // 変換内容を追加する
     fun add(psiElement: PsiElement, type: ConversionType) {
         val file = psiElement.containingFile ?: return
-        val range = ConversionRange(psiElement.textRange.startOffset, psiElement.textRange.endOffset)
-        val javaFq = getJavaFqName(psiElement)
-        val ktFq = getKotlinFqName(psiElement)
-        val entry = type.createEntry(file.name, range, javaFq, ktFq, psiElement)
+        //val range = ConversionRange(psiElement.textRange.startOffset, psiElement.textRange.endOffset)
+        //val javaFq = getJavaFqName(psiElement)
+        //val ktFq = getKotlinFqName(psiElement)
+        //val entry = type.createEntry(file.name, range, javaFq, ktFq, psiElement)
+        val entry = type.createEntry(file.name)
         entries.add(entry)
     }
 

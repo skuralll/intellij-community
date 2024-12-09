@@ -11,27 +11,34 @@ data class ConversionRange(val start : Int, val end : Int)
 @Serializable
 sealed class ConversionEntry{
     abstract val file : String
-    abstract val range : ConversionRange
-    abstract val javaFq : String
-    abstract val ktFq : String
+    //abstract val range : ConversionRange
+    //abstract val javaFq : String
+    //abstract val ktFq : String
 }
 
-// const修飾子追加
+// 共通の変換エントリ TODO : 変換処理ごとにエントリを追加する
 @Serializable
-data class ConstModifierEntry(
+data class CommonModifierEntry(
     override val file: String,
-    override val range: ConversionRange,
-    override val javaFq : String,
-    override val ktFq : String
+    //override val range: ConversionRange,
+    //override val javaFq : String,
+    //override val ktFq : String
 ) : ConversionEntry()
 
-// コンストラクタ変換
-@Serializable
-data class ConstructorEntry(
-    override val file: String,
-    override val range: ConversionRange,
-    override val javaFq : String,
-    override val ktFq : String
-) : ConversionEntry()
-
+//// const修飾子追加
+//@Serializable
+//data class ConstModifierEntry(
+//    override val file: String,
+//    override val range: ConversionRange,
+//    override val javaFq : String,
+//    override val ktFq : String
+//) : ConversionEntry()
 //
+//// コンストラクタ変換
+//@Serializable
+//data class ConstructorEntry(
+//    override val file: String,
+//    override val range: ConversionRange,
+//    override val javaFq : String,
+//    override val ktFq : String
+//) : ConversionEntry()
