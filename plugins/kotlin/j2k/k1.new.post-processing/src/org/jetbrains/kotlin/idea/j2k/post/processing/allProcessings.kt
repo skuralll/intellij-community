@@ -20,14 +20,12 @@ import org.jetbrains.kotlin.j2k.NamedPostProcessingGroup
 import org.jetbrains.kotlin.j2k.postProcessings.*
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.idea.j2k.post.processing.processings.LoggingProcessing
+import org.jetbrains.kotlin.nj2k.DebugFlags
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.psiUtil.parents
-
-// Whether to delete labels (for debugging)
-private const val doDeleteLabel: Boolean = true
 
 private val errorsFixingDiagnosticBasedPostProcessingGroup = DiagnosticBasedPostProcessingGroup(
     diagnosticBasedProcessing(MissingIteratorExclExclFixFactory, Errors.ITERATOR_ON_NULLABLE),
@@ -159,7 +157,7 @@ private val optimizingImportsAndFormattingCodePostProcessingGroup = NamedPostPro
         add(ShortenReferenceProcessing())
         add(OptimizeImportsProcessing())
         add(RemoveRedundantEmptyLinesProcessing())
-        if (doDeleteLabel) {
+        if (DebugFlags.doDeleteLabel) {
             add(ClearUnknownInferenceLabelsProcessing())
             add(ClearExplicitLabelsProcessing())
         }

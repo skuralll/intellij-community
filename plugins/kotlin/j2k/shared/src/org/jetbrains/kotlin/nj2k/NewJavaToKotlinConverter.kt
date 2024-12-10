@@ -29,9 +29,6 @@ import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 import org.jetbrains.kotlin.resolve.ImportPath
 
-// Whether to show labels-info (for debugging)
-private val showLabelsInfo = false
-
 class NewJavaToKotlinConverter(
     val project: Project,
     val targetModule: Module?,
@@ -203,7 +200,7 @@ class NewJavaToKotlinConverter(
         }
 
         // for debugging
-        if (showLabelsInfo) context.elementsInfoStorage.printAllLabels()
+        if (DebugFlags.showLabelsInfo) context.elementsInfoStorage.printAllLabels()
 
         return Result(
             results,
