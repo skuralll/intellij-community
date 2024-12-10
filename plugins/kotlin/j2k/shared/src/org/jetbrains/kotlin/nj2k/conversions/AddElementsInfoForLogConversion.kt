@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
 import org.jetbrains.kotlin.nj2k.RecursiveConversion
 import org.jetbrains.kotlin.nj2k.log.JKElementInfoForLog
+import org.jetbrains.kotlin.nj2k.tree.JKField
 import org.jetbrains.kotlin.nj2k.tree.JKMethod
 import org.jetbrains.kotlin.nj2k.tree.JKTreeElement
 
@@ -15,14 +16,20 @@ class AddElementsInfoForLogConversion(context: NewJ2kConverterContext) : Recursi
     override fun applyToElement(element: JKTreeElement): JKTreeElement {
         when (element) {
             is JKMethod -> addInfoForFunction(element)
+            is JKField -> addInfoForField(element)
         }
         return recurse(element)
     }
 
     // メソッドの場合
-    private fun addInfoForFunction(function: JKMethod) {
+    private fun addInfoForFunction(element: JKMethod) {
         // nullの場合，明記されていないコンストラクタなどが考えられる
-        context.elementsInfoStorage.addEntry(function, JKElementInfoForLog(function.psi))
+        context.elementsInfoStorage.addEntry(element, JKElementInfoForLog(element.psi))
+    }
+
+    // フィールドの場合
+    private fun addInfoForField(element: JKField) {
+        context.elementsInfoStorage.addEntry(element, JKElementInfoForLog(element.psi))
     }
 
 }

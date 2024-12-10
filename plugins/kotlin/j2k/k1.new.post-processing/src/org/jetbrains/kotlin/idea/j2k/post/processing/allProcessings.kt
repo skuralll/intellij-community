@@ -27,7 +27,7 @@ import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 // Whether to delete labels (for debugging)
-private const val doDeleteLabel: Boolean = false
+private const val doDeleteLabel: Boolean = true
 
 private val errorsFixingDiagnosticBasedPostProcessingGroup = DiagnosticBasedPostProcessingGroup(
     diagnosticBasedProcessing(MissingIteratorExclExclFixFactory, Errors.ITERATOR_ON_NULLABLE),
