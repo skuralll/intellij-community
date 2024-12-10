@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.j2k.PostProcessingTarget
 import org.jetbrains.kotlin.j2k.elements
 import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
 import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
+import org.jetbrains.kotlin.nj2k.log.ConversionType
 import org.jetbrains.kotlin.nj2k.log.JKElementInfoForLog
 import org.jetbrains.kotlin.psi.*
 
@@ -40,7 +41,12 @@ class LoggingProcessingVisitor(val context: NewJ2kConverterContext) : PsiElement
             // プライマリコンストラクタ
             is KtPrimaryConstructor -> {
                 element.valueParameters.filter { it.hasValOrVar() }.forEach { parameter ->
-                    // TODO 各プロパティの記録処理
+                    // プライマリコンストラクタのパラメータの場合ラベルと名前の間に空白が入るため，prevSiblingを挟む
+                    parameter.nameIdentifier?.prevSibling?.elementInfo(context)?.forEach {
+                        if (it is JKElementInfoForLog) {
+                            ConversionRecorder.add(it.javaPsi, parameter, ConversionType.PROPERTY)
+                        }
+                    }
                 }
             }
 
@@ -48,7 +54,7 @@ class LoggingProcessingVisitor(val context: NewJ2kConverterContext) : PsiElement
             is KtFunction -> {
                 element.nameIdentifier?.elementInfo(context)?.forEach {
                     if (it is JKElementInfoForLog) {
-                        ConversionRecorder.add(it.javaPsi, element)
+                        ConversionRecorder.add(it.javaPsi, element, ConversionType.FUNCTION)
                     }
                 }
             }
@@ -56,10 +62,10 @@ class LoggingProcessingVisitor(val context: NewJ2kConverterContext) : PsiElement
             // プロパティ
             is KtProperty -> {
                 // クラスボディ内のプロパティのみを対象とする(ローカルなプロパティは対象外)
-                if(element.parent is KtClassBody){
+                if (element.parent is KtClassBody) {
                     element.nameIdentifier?.elementInfo(context)?.forEach {
                         if (it is JKElementInfoForLog) {
-                            ConversionRecorder.add(it.javaPsi, element)
+                            ConversionRecorder.add(it.javaPsi, element, ConversionType.PROPERTY)
                         }
                     }
                 }

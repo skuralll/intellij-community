@@ -17,7 +17,6 @@ sealed class ConversionEntry{
 }
 
 // 共通の変換エントリ
-// TODO : Serializableを変換タイプに応じて追加する
 @Serializable
 @SerialName("common")
 data class CommonModifierEntry(
@@ -26,24 +25,20 @@ data class CommonModifierEntry(
     override val ktFq : String
 ) : ConversionEntry()
 
-/*
-* TODO : 変換処理ごとにエントリを追加する
-*/
+// Functionの変換エントリ
+@Serializable
+@SerialName("function")
+data class FunctionModifierEntry(
+    override val file: String,
+    override val javaFq : String,
+    override val ktFq : String
+) : ConversionEntry()
 
-//// const修飾子追加
-//@Serializable
-//data class ConstModifierEntry(
-//    override val file: String,
-//    override val range: ConversionRange,
-//    override val javaFq : String,
-//    override val ktFq : String
-//) : ConversionEntry()
-//
-//// コンストラクタ変換
-//@Serializable
-//data class ConstructorEntry(
-//    override val file: String,
-//    override val range: ConversionRange,
-//    override val javaFq : String,
-//    override val ktFq : String
-//) : ConversionEntry()
+// プロパティの変換エントリ
+@Serializable
+@SerialName("property")
+data class PropertyModifierEntry(
+    override val file: String,
+    override val javaFq : String,
+    override val ktFq : String
+) : ConversionEntry()
