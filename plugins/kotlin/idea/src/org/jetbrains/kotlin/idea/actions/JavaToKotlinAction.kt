@@ -161,7 +161,8 @@ class JavaToKotlinAction : AnAction() {
             snapShot.finish() // スナップショット保存
 
             // 完全な変換/Undoが行われるまでプレビューを表示し続ける
-            while (!Previewer(project, project.guessProjectDir()!!, javaFiles, newFiles).showAndGet()) {
+            val previewer = Previewer(project, project.guessProjectDir()!!, javaFiles, newFiles)
+            while (!previewer.showAndGet()) {
                 UndoManager.getInstance(project).undo(null)
                 if (!isConverted(newFiles)) break // Undoがキャンセルされた場合ループ継続
             }
