@@ -70,6 +70,14 @@ class JKElementInfoStorage {
         elementToLabel[element] = label
     }
 
+    fun addInfo(label: JKElementInfoLabel, info: JKElementInfo) {
+        //println("==========")
+        //println("label : ${label.render()}")
+        if (labelToInfo[label] == null) return
+        labelToInfo[label]?.add(info)
+        //println("done.")
+    }
+
     // for debugging
     fun printAllLabels() {
         elementToLabel.forEach { (element, label) ->

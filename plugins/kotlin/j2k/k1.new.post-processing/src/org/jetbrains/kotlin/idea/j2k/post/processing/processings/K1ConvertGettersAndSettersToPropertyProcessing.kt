@@ -34,6 +34,10 @@ import org.jetbrains.kotlin.idea.codeinsight.utils.removeRedundantGetter
 import org.jetbrains.kotlin.idea.codeinsight.utils.removeRedundantSetter
 import org.jetbrains.kotlin.idea.codeinsights.impl.base.intentions.AddAnnotationUseSiteTargetUtils.addUseSiteTarget
 import org.jetbrains.kotlin.idea.core.setVisibility
+import org.jetbrains.kotlin.idea.j2k.post.processing.inference.common.addElementInfo
+import org.jetbrains.kotlin.idea.j2k.post.processing.inference.common.elementInfo
+import org.jetbrains.kotlin.idea.j2k.post.processing.inference.common.getInfoLabel
+import org.jetbrains.kotlin.idea.j2k.post.processing.inference.common.isLabel
 import org.jetbrains.kotlin.idea.quickfix.AddAnnotationTargetFix.Companion.getExistingAnnotationTargets
 import org.jetbrains.kotlin.idea.refactoring.isAbstract
 import org.jetbrains.kotlin.idea.refactoring.isInterfaceClass
@@ -55,6 +59,7 @@ import org.jetbrains.kotlin.nj2k.externalCodeProcessing.JKFakeFieldData
 import org.jetbrains.kotlin.nj2k.externalCodeProcessing.JKFieldData
 import org.jetbrains.kotlin.nj2k.externalCodeProcessing.JKPhysicalMethodData
 import org.jetbrains.kotlin.nj2k.externalCodeProcessing.NewExternalCodeProcessing
+import org.jetbrains.kotlin.nj2k.log.JKElementInfoForLog
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.*
 import org.jetbrains.kotlin.resolve.descriptorUtil.annotationClass
@@ -97,7 +102,7 @@ internal class K1ConvertGettersAndSettersToPropertyProcessing : ElementsBasedPos
         val collector = PropertiesDataCollector(resolutionFacade, searcher)
         val filter = PropertiesDataFilter(resolutionFacade, ktElements, searcher, psiFactory)
         val externalProcessingUpdater = ExternalProcessingUpdater(converterContext.externalCodeProcessor)
-        val converter = ClassConverter(searcher, psiFactory)
+        val converter = ClassConverter(searcher, psiFactory, converterContext)
 
         val classesWithPropertiesData: List<Pair<KtClassOrObject, List<PropertyData>>> = runReadAction {
             val classes = ktElements.descendantsOfType<KtClassOrObject>().sortedByInheritance(resolutionFacade)
@@ -536,7 +541,8 @@ private class ExternalProcessingUpdater(private val processing: NewExternalCodeP
  */
 private class ClassConverter(
     private val searcher: JKInMemoryFilesSearcher,
-    private val psiFactory: KtPsiFactory
+    private val psiFactory: KtPsiFactory,
+    private val converterContext: NewJ2kConverterContext
 ) {
     fun convertClass(klass: KtClassOrObject, propertiesWithAccessors: List<PropertyWithAccessors>) {
         for (propertyWithAccessors in propertiesWithAccessors) {
@@ -578,6 +584,28 @@ private class ClassConverter(
         if (getterVisibility != null) {
             ktProperty.setVisibility(getterVisibility)
         }
+
+        // getterとsetterのラベルをプロパティのラベルにマージする
+        fun mergeLabels() {
+            if (realGetter != null) {
+                realGetter.function.nameIdentifier?.elementInfo(converterContext)?.let { infoList ->
+                    realGetter.function.removeAllLabels()
+                    infoList.filterIsInstance<JKElementInfoForLog>().forEach { info ->
+                        ktProperty.nameIdentifier?.addElementInfo(converterContext, info)
+                    }
+                }
+            }
+            if (realSetter != null) {
+                realSetter.function.nameIdentifier?.elementInfo(converterContext)?.let { infoList ->
+                    realSetter.function.removeAllLabels()
+                    infoList.filterIsInstance<JKElementInfoForLog>().forEach { info ->
+                        ktProperty.nameIdentifier?.addElementInfo(converterContext, info)
+                    }
+                }
+            }
+        }
+
+        mergeLabels()
 
         fun removeRealAccessors() {
             if (realGetter != null) {
@@ -977,3 +1005,14 @@ private data class FakeSetter(
 
 private fun String.fixSetterParameterName(): String =
     if (this == FIELD_KEYWORD.value) "value" else this
+
+// logging
+private fun KtNamedFunction.removeAllLabels() {
+    fun PsiElement.deleteLabel() {
+        if (this is PsiComment && isLabel()) {
+            delete()
+        }
+    }
+    this.nameIdentifier?.prevSibling?.deleteLabel()
+    this.typeReference?.prevSibling?.deleteLabel()
+}
