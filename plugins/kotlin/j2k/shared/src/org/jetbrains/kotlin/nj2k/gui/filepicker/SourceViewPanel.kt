@@ -3,11 +3,9 @@ package org.jetbrains.kotlin.nj2k.gui.filepicker
 
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileTypes.FileType
-import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.findDocument
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.Align
@@ -26,6 +24,9 @@ class SourceViewPanel(document: Document?, project: Project, fileType: FileType)
 
     // エディタ
     private val sourceViewer: SourceViewField = SourceViewField(document, project, fileType, true)
+
+    // PsiFile
+    val psiFile get() = sourceViewer.psiFile
 
     init {
         // コードビューア, リサイズさせるためにCENTERに配置
