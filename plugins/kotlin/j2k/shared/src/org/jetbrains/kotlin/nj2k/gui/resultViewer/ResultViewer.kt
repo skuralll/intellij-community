@@ -1,5 +1,5 @@
 // Copyright 2000-2024 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
-package org.jetbrains.kotlin.nj2k.gui.previewer
+package org.jetbrains.kotlin.nj2k.gui.resultViewer
 
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileTypes.FileTypeManager
@@ -22,7 +22,7 @@ import java.awt.Dimension
 import javax.swing.JComponent
 
 // 変換プレビュー
-class Previewer(private val project: Project, private val rootFile: VirtualFile, private val javaFiles : List<PsiJavaFile>, private val ktFiles : List<KtFile>) : DialogWrapper(true), FileTreeListener {
+class ResultViewer(private val project: Project, private val rootFile: VirtualFile, private val javaFiles : List<PsiJavaFile>, private val ktFiles : List<KtFile>) : DialogWrapper(true), FileTreeListener {
 
     // UI
     private val fileExplorer: JKFileTreePanel
@@ -53,10 +53,10 @@ class Previewer(private val project: Project, private val rootFile: VirtualFile,
         // パネル作成
         return panel {
             row {
-                cell(JBLabel(KotlinBundle.message("action.j2k.gui.preview.header")).apply { font = JBFont.h3().asBold() })
+                cell(JBLabel(KotlinBundle.message("action.j2k.gui.result_viewer.header")).apply { font = JBFont.h3().asBold() })
             }
             row {
-                label(KotlinBundle.message("action.j2k.gui.preview.description"))
+                label(KotlinBundle.message("action.j2k.gui.result_viewer.description"))
                 bottomGap(BottomGap.SMALL)
             }
             //separator()
