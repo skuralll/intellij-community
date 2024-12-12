@@ -199,6 +199,9 @@ class NewJavaToKotlinConverter(
             )
         }
 
+        // for debugging
+        if (DebugFlags.showLabelsInfo) context.elementsInfoStorage.printAllLabels()
+
         return Result(
             results,
             externalCodeProcessing.takeIf { it.isExternalProcessingNeeded() },

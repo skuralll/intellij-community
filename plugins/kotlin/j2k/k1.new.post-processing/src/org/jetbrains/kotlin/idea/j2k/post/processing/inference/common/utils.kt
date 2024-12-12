@@ -14,9 +14,24 @@ fun PsiElement.getInferenceLabel(): JKElementInfoLabel? =
     prevSibling?.safeAs<PsiComment>()?.text?.asInferenceLabel()
         ?: parent?.safeAs<KtTypeProjection>()?.getInferenceLabel()
 
+fun PsiElement.getExplicitLabel(): JKElementInfoLabel? =
+    prevSibling?.safeAs<PsiComment>()?.text?.asExplicitLabel()
+        ?: parent?.safeAs<KtTypeProjection>()?.getExplicitLabel()
+
+fun PsiElement.getInfoLabel(): JKElementInfoLabel? =
+    getInferenceLabel() ?: getExplicitLabel()
+
+fun PsiComment.isLabel(): Boolean =
+    text.asInferenceLabel() != null || text.asExplicitLabel() != null
+
 fun PsiElement.elementInfo(converterContext: NewJ2kConverterContext): List<JKElementInfo>? =
     getInferenceLabel()?.let { label ->
         converterContext.elementsInfoStorage.getInfoForLabel(label)
+    }
+
+fun PsiElement.addElementInfo(converterContext: NewJ2kConverterContext, info : JKElementInfo) =
+    getInfoLabel()?.let { label ->
+        converterContext.elementsInfoStorage.addInfo(label, info)
     }
 
 

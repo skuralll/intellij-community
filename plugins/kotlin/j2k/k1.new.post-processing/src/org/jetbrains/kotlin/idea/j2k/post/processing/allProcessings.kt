@@ -19,6 +19,8 @@ import org.jetbrains.kotlin.j2k.InspectionLikeProcessingGroup
 import org.jetbrains.kotlin.j2k.NamedPostProcessingGroup
 import org.jetbrains.kotlin.j2k.postProcessings.*
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.idea.j2k.post.processing.processings.LoggingProcessing
+import org.jetbrains.kotlin.nj2k.DebugFlags
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtProperty
@@ -118,16 +120,15 @@ private val cleaningUpDiagnosticBasedPostProcessingGroup = DiagnosticBasedPostPr
 
 private val inferringTypesPostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.inferring.types"),
-    listOf(
+    listOfNotNull(
         NullabilityInferenceProcessing(),
         MutabilityInferenceProcessing(),
-        ClearUnknownInferenceLabelsProcessing()
     )
 )
 
 private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.cleaning.up.code"),
-    listOf(
+    listOfNotNull(
         DiagnosticBasedPostProcessingGroup(
             // We need to remove the redundant projection before `ConvertGettersAndSettersToPropertyProcessing`,
             // so that the property and accessor types wouldn't differ in projections.
@@ -139,24 +140,35 @@ private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
         addOrRemoveModifiersProcessingGroup,
         inspectionLikePostProcessingGroup,
         removeRedundantElementsProcessingGroup,
-        ClearExplicitLabelsProcessing(),
         cleaningUpDiagnosticBasedPostProcessingGroup,
+    )
+)
+
+private val loggingPostProcessingGroup = NamedPostProcessingGroup(
+    KotlinNJ2KServicesBundle.message("processing.step.logging"),
+    listOf(
+        LoggingProcessing()
     )
 )
 
 private val optimizingImportsAndFormattingCodePostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.optimizing.imports.and.formatting.code"),
-    listOf(
-        ShortenReferenceProcessing(),
-        OptimizeImportsProcessing(),
-        RemoveRedundantEmptyLinesProcessing(),
-        FormatCodeProcessing()
-    )
+    buildList {
+        add(ShortenReferenceProcessing())
+        add(OptimizeImportsProcessing())
+        add(RemoveRedundantEmptyLinesProcessing())
+        if (DebugFlags.doDeleteLabel) {
+            add(ClearUnknownInferenceLabelsProcessing())
+            add(ClearExplicitLabelsProcessing())
+        }
+        add(FormatCodeProcessing())
+    }
 )
 
 internal val allProcessings: List<NamedPostProcessingGroup> = listOf(
     inferringTypesPostProcessingGroup,
     cleaningUpCodePostProcessingGroup,
+    loggingPostProcessingGroup,
     optimizingImportsAndFormattingCodePostProcessingGroup
 )
 

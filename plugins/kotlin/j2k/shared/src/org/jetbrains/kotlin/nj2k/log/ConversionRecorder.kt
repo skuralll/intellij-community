@@ -48,12 +48,12 @@ object ConversionRecorder {
     }
 
     // 変換内容を追加する
-    fun add(psiElement: PsiElement, type: ConversionType) {
-        val file = psiElement.containingFile ?: return
-        val range = ConversionRange(psiElement.textRange.startOffset, psiElement.textRange.endOffset)
-        val javaFq = getJavaFqName(psiElement)
-        val ktFq = getKotlinFqName(psiElement)
-        val entry = type.createEntry(file.name, range, javaFq, ktFq, psiElement)
+    fun add(javaPsi: PsiElement?, ktPsi : PsiElement, type : ConversionType = ConversionType.COMMON) {
+        // TODO ファイル名取得処理の改善(javaPsiはnullable)
+        val fileName = javaPsi?.containingFile?.name ?: return
+        val javaFq = getJavaFqName(javaPsi)
+        val ktFq = getKotlinFqName(ktPsi)
+        val entry = type.createEntry(fileName, javaFq, ktFq)
         entries.add(entry)
     }
 

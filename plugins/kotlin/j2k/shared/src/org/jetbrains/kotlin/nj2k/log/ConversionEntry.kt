@@ -1,6 +1,7 @@
 // Copyright 2000-2024 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package org.jetbrains.kotlin.nj2k.log
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // 文字列の範囲指定
@@ -11,27 +12,33 @@ data class ConversionRange(val start : Int, val end : Int)
 @Serializable
 sealed class ConversionEntry{
     abstract val file : String
-    abstract val range : ConversionRange
     abstract val javaFq : String
     abstract val ktFq : String
 }
 
-// const修飾子追加
+// 共通の変換エントリ
 @Serializable
-data class ConstModifierEntry(
+@SerialName("common")
+data class CommonModifierEntry(
     override val file: String,
-    override val range: ConversionRange,
     override val javaFq : String,
     override val ktFq : String
 ) : ConversionEntry()
 
-// コンストラクタ変換
+// Functionの変換エントリ
 @Serializable
-data class ConstructorEntry(
+@SerialName("function")
+data class FunctionModifierEntry(
     override val file: String,
-    override val range: ConversionRange,
     override val javaFq : String,
     override val ktFq : String
 ) : ConversionEntry()
 
-//
+// プロパティの変換エントリ
+@Serializable
+@SerialName("property")
+data class PropertyModifierEntry(
+    override val file: String,
+    override val javaFq : String,
+    override val ktFq : String
+) : ConversionEntry()

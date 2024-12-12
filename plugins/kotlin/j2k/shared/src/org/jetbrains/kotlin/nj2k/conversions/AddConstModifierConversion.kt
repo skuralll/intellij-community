@@ -2,17 +2,11 @@
 
 package org.jetbrains.kotlin.nj2k.conversions
 
-import com.intellij.psi.PsiNamedElement
-import com.intellij.psi.util.elementType
 import org.jetbrains.kotlin.analysis.api.KaSession
-import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
 import org.jetbrains.kotlin.j2k.Nullability.NotNull
 import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
 import org.jetbrains.kotlin.nj2k.RecursiveConversion
 import org.jetbrains.kotlin.nj2k.isObjectOrCompanionObject
-import org.jetbrains.kotlin.nj2k.log.ConversionEntry
-import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
-import org.jetbrains.kotlin.nj2k.log.ConversionType
 import org.jetbrains.kotlin.nj2k.tree.*
 import org.jetbrains.kotlin.nj2k.tree.Mutability.IMMUTABLE
 import org.jetbrains.kotlin.nj2k.tree.OtherModifier.CONST
@@ -33,10 +27,6 @@ class AddConstModifierConversion(context: NewJ2kConverterContext) : RecursiveCon
         val containingDeclaration = element.parentOfType<JKClass>()
         if (containingDeclaration == null || containingDeclaration.isObjectOrCompanionObject) {
             element.otherModifierElements += JKOtherModifierElement(CONST)
-            // logging
-            element.psi?.let {
-                ConversionRecorder.add(it, ConversionType.ADD_CONST_MODIFIER)
-            }
         }
         return recurse(element)
     }
