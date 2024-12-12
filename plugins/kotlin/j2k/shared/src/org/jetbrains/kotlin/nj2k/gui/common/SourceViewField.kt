@@ -10,11 +10,14 @@ import com.intellij.openapi.command.UndoConfirmationPolicy
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.editor.event.EditorMouseEvent
+import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
 import com.intellij.ui.EditorTextField
@@ -27,6 +30,9 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
     // 対象のPSI
     var psiFile: PsiFile? = null
         private set
+
+    // イベントハンドラ管理
+    private val eventListeners = mutableListOf<SourceViewFieldListener>()
 
     companion object {
         // 空のDocumentを作成する
@@ -45,14 +51,25 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         // 常にスクロールバーを表示する
         editor.setVerticalScrollbarVisible(true)
         editor.setHorizontalScrollbarVisible(true)
-        // イベントハンドラ登録
-        //editor.addEditorMouseListener(object : EditorMouseListener {
-        //    override fun mouseClicked(event: EditorMouseEvent) {
-        //        println("==== Mouse Clicked ====")
-        //        println(document.charsSequence[event.offset].toString())
-        //    }
-        //})
+        // イベント
+        editor.addEditorMouseListener(object : EditorMouseListener {
+            override fun mouseClicked(event: EditorMouseEvent) {
+                psiFile?.getPsiElement(event.offset)?.let { element ->
+                    onClickElement(element)
+                }
+            }
+        })
         return editor
+    }
+
+    // イベントハンドラを追加する
+    fun addEventListener(listener: SourceViewFieldListener) {
+        eventListeners.add(listener)
+    }
+
+    // ファイル内の要素をクリックしたときに呼ばれる
+    private fun onClickElement(element: PsiElement) {
+        eventListeners.forEach { it.onClickElement(element) }
     }
 
     // ファイル切り替えメソッド
@@ -79,17 +96,29 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
 
     // ファイルタイプに応じたPsiFileを作成する
     private fun setPsi(fileType: FileType, content: String) {
-        psiFile = when(fileType){
+        psiFile = when (fileType) {
             JavaFileType.INSTANCE -> {
                 PsiFileFactory.getInstance(project).createFileFromText(JavaLanguage.INSTANCE, content)
             }
+
             KotlinFileType.INSTANCE -> {
                 KtPsiFactory(project).createFile(content)
             }
+
             else -> {
                 null
             }
         }
     }
 
+    // N文字目のPsiElementを取得する
+    private fun PsiFile.getPsiElement(offset: Int): PsiElement? {
+        return this.findElementAt(offset)
+    }
+
+}
+
+// イベントハンドラ (SourceViewFieldで起きたイベントを扱いたい場合，このクラスを継承して実装する)
+abstract class SourceViewFieldListener {
+    fun onClickElement(element: PsiElement) {}
 }

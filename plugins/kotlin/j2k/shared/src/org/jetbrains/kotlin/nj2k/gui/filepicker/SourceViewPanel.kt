@@ -11,6 +11,7 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
 import org.jetbrains.kotlin.nj2k.gui.common.SourceViewField
+import org.jetbrains.kotlin.nj2k.gui.common.SourceViewFieldListener
 import java.awt.BorderLayout
 import javax.swing.JComponent
 
@@ -31,6 +32,11 @@ class SourceViewPanel(document: Document?, project: Project, fileType: FileType)
     init {
         // コードビューア, リサイズさせるためにCENTERに配置
         add(sourceViewer, BorderLayout.CENTER)
+    }
+
+    // イベントリスナーを追加
+    fun addEventListener(listener: SourceViewFieldListener) {
+        sourceViewer.addEventListener(listener)
     }
 
     // ファイル切り替えメソッド
