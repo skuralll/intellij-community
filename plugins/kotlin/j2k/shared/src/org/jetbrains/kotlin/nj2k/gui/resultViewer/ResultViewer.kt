@@ -22,11 +22,16 @@ import java.awt.Dimension
 import javax.swing.JComponent
 
 // 変換プレビュー
-class ResultViewer(private val project: Project, private val rootFile: VirtualFile, private val javaFiles : List<PsiJavaFile>, private val ktFiles : List<KtFile>) : DialogWrapper(true), FileTreeListener {
+class ResultViewer(
+    private val project: Project,
+    private val rootFile: VirtualFile,
+    private val javaFiles: List<PsiJavaFile>,
+    private val ktFiles: List<KtFile>
+) : DialogWrapper(true), FileTreeListener {
 
     // UI
     private val fileExplorer: JKFileTreePanel
-    private val diffView : SourceDiffPanel
+    private val diffView: SourceDiffPanel
 
     init {
         title = KotlinBundle.message("action.j2k.gui.title")
@@ -80,8 +85,11 @@ class ResultViewer(private val project: Project, private val rootFile: VirtualFi
         diffView.setAfter(null, FileTypes.UNKNOWN)
         // ファイル切り替え
         diffView.setAfter(file.findDocument(), file.fileType)
-        javaFiles.firstOrNull{ it.virtualFile.equals(file) }?.let {
-            diffView.setBefore(EditorFactory.getInstance().createDocument(it.text), FileTypeManager.getInstance().getFileTypeByExtension("java"))
+        javaFiles.firstOrNull { it.virtualFile.equals(file) }?.let {
+            diffView.setBefore(
+                EditorFactory.getInstance().createDocument(it.text),
+                FileTypeManager.getInstance().getFileTypeByExtension("java")
+            )
         }
     }
 
