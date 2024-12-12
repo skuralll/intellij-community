@@ -1,7 +1,9 @@
 // Copyright 2000-2024 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package org.jetbrains.kotlin.nj2k.log
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
@@ -10,7 +12,6 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
 import org.jetbrains.kotlin.nj2k.getRelativePath
-import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -37,21 +38,26 @@ object ConversionRecorder {
         // JSONにエンコード
         val jsonFormatter = Json { prettyPrint = true }
         val json = jsonFormatter.encodeToString(ListSerializer(ConversionEntry.serializer()), entries)
-        // ディレクトリ作成
-        val dir = File("${project?.basePath}/${LOG_DIR}")
-        dir.mkdirs()
-        // ログ作成
-        val dateTime = LocalDateTime.now()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss")
-        val formatted = dateTime.format(formatter)
-        val file = File("${project?.basePath}/${LOG_DIR}/$formatted.json")
-        file.writeText(json)
+        // ログ出力
+        ApplicationManager.getApplication().runWriteAction {
+            val root = project?.guessProjectDir() ?: return@runWriteAction // TODO エラー出力
+            // ディレクトリ作成
+            val logDir = root.findChild(LOG_DIR) ?: let {
+                root.createChildDirectory(this, LOG_DIR)
+            }
+            // ログ作成
+            val dateTime = LocalDateTime.now()
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss")
+            val formatted = dateTime.format(formatter)
+            val fileName = "$formatted.json"
+            logDir.createChildData(this, fileName).apply { setBinaryContent(json.toByteArray()) }
+        }
     }
 
     // 変換内容を追加する
-    fun add(javaPsi: PsiElement?, ktPsi : PsiElement, type : ConversionType = ConversionType.COMMON) {
+    fun add(javaPsi: PsiElement?, ktPsi: PsiElement, type: ConversionType = ConversionType.COMMON) {
         // TODO ファイル名取得処理の改善(javaPsiはnullable)
-        if(project == null) return
+        if (project == null) return
         val filePath = javaPsi?.containingFile?.virtualFile?.getRelativePath(project!!) ?: return
         val javaFq = getJavaFqName(javaPsi)
         val ktFq = getKotlinFqName(ktPsi)
