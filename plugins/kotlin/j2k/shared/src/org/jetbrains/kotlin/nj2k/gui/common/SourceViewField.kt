@@ -1,6 +1,8 @@
 // Copyright 2000-2024 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package org.jetbrains.kotlin.nj2k.gui.common
 
+import com.intellij.ide.highlighter.JavaFileType
+import com.intellij.lang.java.JavaLanguage
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
@@ -13,10 +15,18 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileFactory
 import com.intellij.ui.EditorTextField
+import org.jetbrains.kotlin.idea.KotlinFileType
+import org.jetbrains.kotlin.psi.KtPsiFactory
 
 class SourceViewField(document: Document?, project: Project, fileType: FileType, isViewer: Boolean) :
     EditorTextField(document ?: getEmptyDocument(), project, fileType, isViewer) {
+
+    // 対象のPSI
+    var psiFile: PsiFile? = null
+        private set
 
     companion object {
         // 空のDocumentを作成する
@@ -27,7 +37,7 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         // ファイルの最初の行にフォーカスを当てる
         setCaretPosition(0)
         // 複数行での表示にする
-        setOneLineMode(false)
+        isOneLineMode = false
     }
 
     override fun createEditor(): EditorEx {
@@ -35,6 +45,13 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         // 常にスクロールバーを表示する
         editor.setVerticalScrollbarVisible(true)
         editor.setHorizontalScrollbarVisible(true)
+        // イベントハンドラ登録
+        //editor.addEditorMouseListener(object : EditorMouseListener {
+        //    override fun mouseClicked(event: EditorMouseEvent) {
+        //        println("==== Mouse Clicked ====")
+        //        println(document.charsSequence[event.offset].toString())
+        //    }
+        //})
         return editor
     }
 
@@ -45,6 +62,7 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
                 runWriteAction {
                     this.document.setText(document?.text ?: "")
                     this.fileType = fileType
+                    setPsi(fileType, document?.text ?: "")
                 }
             }
             // カーソル位置を戦闘に戻す
@@ -57,6 +75,21 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
 
     fun switchFile(file: VirtualFile) {
         switchFile(FileDocumentManager.getInstance().getDocument(file), file.fileType)
+    }
+
+    // ファイルタイプに応じたPsiFileを作成する
+    private fun setPsi(fileType: FileType, content: String) {
+        psiFile = when(fileType){
+            JavaFileType.INSTANCE -> {
+                PsiFileFactory.getInstance(project).createFileFromText(JavaLanguage.INSTANCE, content)
+            }
+            KotlinFileType.INSTANCE -> {
+                KtPsiFactory(project).createFile(content)
+            }
+            else -> {
+                null
+            }
+        }
     }
 
 }
