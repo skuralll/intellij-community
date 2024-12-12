@@ -1008,11 +1008,10 @@ private fun String.fixSetterParameterName(): String =
 
 // logging
 private fun KtNamedFunction.removeAllLabels() {
-    fun PsiElement.deleteLabel() {
-        if (this is PsiComment && isLabel()) {
-            delete()
-        }
+    // 型の前のラベルは削除しない
+    listOf(this.nameIdentifier/*, this.typeReference*/).forEach { element ->
+        element?.prevSibling
+            ?.takeIf { it is PsiComment && it.isLabel() }
+            ?.delete()
     }
-    this.nameIdentifier?.prevSibling?.deleteLabel()
-    this.typeReference?.prevSibling?.deleteLabel()
 }

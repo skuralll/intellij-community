@@ -135,7 +135,7 @@ private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
             diagnosticBasedProcessing(RemoveModifierFixBase.createRemoveProjectionFactory(isRedundant = true), Errors.REDUNDANT_PROJECTION),
         ),
         K1ConvertGettersAndSettersToPropertyProcessing(),
-        //MergePropertyWithConstructorParameterProcessing(),
+        MergePropertyWithConstructorParameterProcessing(),
         errorsFixingDiagnosticBasedPostProcessingGroup,
         addOrRemoveModifiersProcessingGroup,
         inspectionLikePostProcessingGroup,
