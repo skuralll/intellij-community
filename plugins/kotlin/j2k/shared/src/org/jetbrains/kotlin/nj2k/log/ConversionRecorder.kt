@@ -9,6 +9,7 @@ import com.intellij.psi.PsiMethod
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
+import org.jetbrains.kotlin.nj2k.getRelativePath
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -50,10 +51,11 @@ object ConversionRecorder {
     // 変換内容を追加する
     fun add(javaPsi: PsiElement?, ktPsi : PsiElement, type : ConversionType = ConversionType.COMMON) {
         // TODO ファイル名取得処理の改善(javaPsiはnullable)
-        val fileName = javaPsi?.containingFile?.name ?: return
+        if(project == null) return
+        val filePath = javaPsi?.containingFile?.virtualFile?.getRelativePath(project!!) ?: return
         val javaFq = getJavaFqName(javaPsi)
         val ktFq = getKotlinFqName(ktPsi)
-        val entry = type.createEntry(fileName, javaFq, ktFq)
+        val entry = type.createEntry(filePath, javaFq, ktFq)
         entries.add(entry)
     }
 

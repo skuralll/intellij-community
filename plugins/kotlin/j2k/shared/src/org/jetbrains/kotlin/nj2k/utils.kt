@@ -2,6 +2,8 @@
 
 package org.jetbrains.kotlin.nj2k
 
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import org.jetbrains.kotlin.lexer.KtKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JvmAbi
@@ -41,4 +43,15 @@ private val KEYWORDS: Set<String> = KtTokens.KEYWORDS.types.map { (it as KtKeywo
 fun String.escaped(): String {
     val onlyUnderscores = isNotEmpty() && this.count { it == '_' } == length
     return if (this in KEYWORDS || '$' in this || onlyUnderscores) "`$this`" else this
+}
+
+// VirtualFileのプロジェクトルートからの相対パスを取得する
+fun VirtualFile.getRelativePath(project: Project): String? {
+    val projectBasePath = project.basePath ?: return null
+    val virtualFilePath = this.path
+    return if (virtualFilePath.startsWith(projectBasePath)) {
+        virtualFilePath.removePrefix("$projectBasePath/")
+    } else {
+        null
+    }
 }
