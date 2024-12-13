@@ -3,7 +3,6 @@ package org.jetbrains.kotlin.nj2k.gui.resultViewer
 
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileTypes.FileTypeManager
-import com.intellij.openapi.fileTypes.FileTypes
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VirtualFile
@@ -31,7 +30,7 @@ class ResultViewer(
 
     // UI
     private val fileExplorer: JKFileTreePanel
-    private val diffView: SourceDiffPanel
+    private val diffView: ConversionDiffPanel
 
     init {
         title = KotlinBundle.message("action.j2k.gui.title")
@@ -42,7 +41,7 @@ class ResultViewer(
         fileExplorer.fileSelectionListeners.add(this)
         fileExplorer.expandFilesNodes(ktFiles.map { it.virtualFile })
         // diff
-        diffView = SourceDiffPanel(project, rootFile)
+        diffView = ConversionDiffPanel(project, rootFile)
         ktFiles.firstOrNull()?.let {
             fileExplorer.focusFile(it.virtualFile) // 最初のファイルにフォーカスする
             switchFile(it.virtualFile) // 最初のファイルを初期表示

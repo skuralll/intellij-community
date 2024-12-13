@@ -14,7 +14,7 @@ import java.awt.Dimension
 import java.awt.GridLayout
 import javax.swing.Icon
 
-class SourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel<*>>(GridLayout(1, 2)) {
+class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel<*>>(GridLayout(1, 2)) {
 
     // ソースビューア
     private val beforeViewer = SourceViewPanel(null, project, JavaFileType.INSTANCE)
