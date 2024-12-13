@@ -81,7 +81,7 @@ class ResultViewer(
     private fun switchFile(file: VirtualFile) {
         // 変換後のファイルをセット
         diffView.setAfter(file.findDocument(), file.fileType)
-        // 返還前のファイルをセット
+        // 変換前のファイルをセット
         val beforeFile = javaFiles.firstOrNull { it.virtualFile.equals(file) }
         if(beforeFile == null){
             diffView.setBefore(file.findDocument(), file.fileType)
