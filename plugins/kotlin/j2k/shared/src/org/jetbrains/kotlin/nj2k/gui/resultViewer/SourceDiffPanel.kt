@@ -21,9 +21,9 @@ class SourceDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel
     private val afterViewer = SourceViewPanel(null, project, KotlinFileType.INSTANCE)
 
     override fun setPreferredSize(preferredSize: Dimension?) {
-        super.setPreferredSize(preferredSize)
-        super.setMinimumSize(preferredSize)
-        super.setMaximumSize(preferredSize)
+        super.preferredSize = preferredSize
+        super.minimumSize = preferredSize
+        super.maximumSize = preferredSize
     }
 
     init {
