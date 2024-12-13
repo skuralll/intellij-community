@@ -80,14 +80,15 @@ class ResultViewer(
 
     // 対象のファイルを切り替える
     private fun switchFile(file: VirtualFile) {
-        // 初期化
-        diffView.setBefore(null, FileTypes.UNKNOWN)
-        diffView.setAfter(null, FileTypes.UNKNOWN)
-        // ファイル切り替え
+        // 変換後のファイルをセット
         diffView.setAfter(file.findDocument(), file.fileType)
-        javaFiles.firstOrNull { it.virtualFile.equals(file) }?.let {
+        // 返還前のファイルをセット
+        val beforeFile = javaFiles.firstOrNull { it.virtualFile.equals(file) }
+        if(beforeFile == null){
+            diffView.setBefore(file.findDocument(), file.fileType)
+        } else{
             diffView.setBefore(
-                EditorFactory.getInstance().createDocument(it.text),
+                EditorFactory.getInstance().createDocument(beforeFile.text),
                 FileTypeManager.getInstance().getFileTypeByExtension("java")
             )
         }
