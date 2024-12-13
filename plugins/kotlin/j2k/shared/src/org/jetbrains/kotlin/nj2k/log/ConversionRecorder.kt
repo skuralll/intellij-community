@@ -4,10 +4,7 @@ package org.jetbrains.kotlin.nj2k.log
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
-import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiField
-import com.intellij.psi.PsiMethod
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
@@ -67,12 +64,13 @@ object ConversionRecorder {
 
     // Javaの完全修飾名を取得する
     private fun getJavaFqName(psiElement: PsiElement): String {
-        return when (psiElement) {
-            is PsiClass -> psiElement.qualifiedName ?: "" // クラスの完全修飾名
-            is PsiMethod -> "${psiElement.containingClass?.qualifiedName}.${psiElement.name}" // メソッドの完全修飾名
-            is PsiField -> "${psiElement.containingClass?.qualifiedName}.${psiElement.name}" // フィールドの完全修飾名
-            else -> ""
-        }
+        //return when (psiElement) {
+        //    is PsiClass -> psiElement.qualifiedName ?: "" // クラスの完全修飾名
+        //    is PsiMethod -> "${psiElement.containingClass?.qualifiedName}.${psiElement.name}" // メソッドの完全修飾名
+        //    is PsiField -> "${psiElement.containingClass?.qualifiedName}.${psiElement.name}" // フィールドの完全修飾名
+        //    else -> ""
+        //}
+        return psiElement.kotlinFqName.toString()
     }
 
     // Kotlinの完全修飾名を取得する
