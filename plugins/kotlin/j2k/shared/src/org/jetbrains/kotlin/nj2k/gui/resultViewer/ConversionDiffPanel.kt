@@ -4,13 +4,23 @@ package org.jetbrains.kotlin.nj2k.gui.resultViewer
 import com.intellij.icons.AllIcons
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.markup.EffectType
+import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiField
+import com.intellij.psi.PsiMethod
 import com.intellij.ui.components.JBPanel
 import org.jetbrains.kotlin.idea.KotlinFileType
+import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
 import org.jetbrains.kotlin.nj2k.gui.filepicker.SourceViewPanel
+import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
+import java.awt.Color
 import java.awt.Dimension
+import java.awt.Font
 import java.awt.GridLayout
 import javax.swing.Icon
 
@@ -21,9 +31,9 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
     private val afterViewer = SourceViewPanel(null, project, KotlinFileType.INSTANCE)
 
     override fun setPreferredSize(preferredSize: Dimension?) {
-        super.preferredSize = preferredSize
-        super.minimumSize = preferredSize
-        super.maximumSize = preferredSize
+        super.setPreferredSize(preferredSize)
+        super.setMinimumSize(preferredSize)
+        super.setMaximumSize(preferredSize)
     }
 
     init {
@@ -42,6 +52,8 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
         beforeViewer.switchFile(document, fileType)
         beforeViewer.label.icon = fileType.icon
         beforeViewer.label.icon = getFileIcon(document, fileType)
+        // ハイライト
+        highlightBefore()
     }
 
     // 変換後情報をセット
@@ -52,10 +64,34 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
 
     // ファイルに適したアイコンを取得するメソッド
     private fun getFileIcon(document: Document?, fileType: FileType): Icon? {
-        return when{
+        return when {
             fileType.icon != AllIcons.FileTypes.Unknown -> fileType.icon
             else -> AllIcons.FileTypes.Any_type
         }
+    }
+
+    // 変換前のハイライト
+    private fun highlightBefore() {
+        val fqNames = ConversionRecorder.getJavaFqNames()
+        // 探索
+        beforeViewer.sourceViewer.psiFile?.accept(object : PsiElementVisitor() {
+            override fun visitElement(element: PsiElement) {
+                when (element) {
+                    is PsiMethod, is PsiField -> {
+                        val fqName = element.kotlinFqName.toString()
+                        if (fqNames.contains(fqName)) {
+                            beforeViewer.sourceViewer.styleElement(
+                                element, TextAttributes(
+                                    null, null, Color.RED, EffectType.LINE_UNDERSCORE,
+                                    Font.PLAIN
+                                )
+                            )
+                        }
+                    }
+                }
+                element.acceptChildren(this)
+            }
+        })
     }
 
 }

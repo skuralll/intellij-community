@@ -3,6 +3,7 @@ package org.jetbrains.kotlin.nj2k.gui.common
 
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.lang.java.JavaLanguage
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
@@ -13,6 +14,7 @@ import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.editor.ex.EditorEx
+import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
@@ -20,6 +22,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.EditorTextField
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.psi.KtPsiFactory
@@ -69,7 +72,7 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
 
     // ファイル内の要素をクリックしたときに呼ばれる
     private fun onClickElement(element: PsiElement) {
-        eventListeners.forEach { it.onClickElement(element) }
+        eventListeners.forEach { it.onClickElement(this, element) }
     }
 
     // ファイル切り替えメソッド
@@ -116,9 +119,22 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         return this.findElementAt(offset)
     }
 
+    // 特定の要素をスタイリングする
+    fun styleElement(element: PsiElement, style: TextAttributes) {
+        if(!PsiTreeUtil.isAncestor(psiFile, element, false)) return
+        ApplicationManager.getApplication().invokeLater {
+            println("This will run when the UI thread is idle.")
+        }
+        //println("================================")
+        //println("editor : ${editor}")
+        //println("editor : ${editor?.markupModel}")
+        //val markupModel = editor?.markupModel ?: return
+        //markupModel.addRangeHighlighter(element.textRange.startOffset, element.textRange.endOffset, 0, style, HighlighterTargetArea.EXACT_RANGE)
+    }
+
 }
 
 // イベントハンドラ (SourceViewFieldで起きたイベントを扱いたい場合，このクラスを継承して実装する)
 abstract class SourceViewFieldListener {
-    fun onClickElement(element: PsiElement) {}
+    fun onClickElement(viewer : SourceViewField, element: PsiElement) {}
 }

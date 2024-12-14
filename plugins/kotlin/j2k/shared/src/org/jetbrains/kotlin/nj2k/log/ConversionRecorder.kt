@@ -62,6 +62,11 @@ object ConversionRecorder {
         entries.add(entry)
     }
 
+    // 変換された全てのJavaの完全修飾名を取得する
+    fun getJavaFqNames(): List<String> {
+        return entries.map { it.javaFq }
+    }
+
     // Javaの完全修飾名を取得する
     private fun getJavaFqName(psiElement: PsiElement): String {
         //return when (psiElement) {
