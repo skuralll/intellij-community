@@ -12,10 +12,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ScrollType
-import com.intellij.openapi.editor.event.EditorFactoryEvent
-import com.intellij.openapi.editor.event.EditorFactoryListener
-import com.intellij.openapi.editor.event.EditorMouseEvent
-import com.intellij.openapi.editor.event.EditorMouseListener
+import com.intellij.openapi.editor.event.*
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
@@ -26,9 +23,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.*
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.EditorTextField
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.psi.KtPsiFactory
@@ -75,6 +71,13 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
                 }
             }
         })
+        editor.addEditorMouseMotionListener(object : EditorMouseMotionListener{
+            override fun mouseMoved(event: EditorMouseEvent) {
+                psiFile?.getPsiElement(event.offset)?.let { element ->
+                    onHoverElement(element)
+                }
+            }
+        })
         return editor
     }
 
@@ -86,6 +89,11 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
     // ファイル内の要素をクリックしたときに呼ばれる
     private fun onClickElement(element: PsiElement) {
         eventListeners.forEach { it.onClickElement(this, element) }
+    }
+
+    // ファイル内の要素をホバーしたときに呼ばれる
+    private fun onHoverElement(element: PsiElement) {
+        eventListeners.forEach { it.onHoverElement(this, element) }
     }
 
     // ファイル切り替えメソッド
@@ -132,6 +140,11 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         return this.findElementAt(offset)
     }
 
+    // N文字目のPsiElementの親Elementを取得する
+    private fun PsiFile.getParentPsiElement(offset: Int): PsiElement? {
+        return PsiTreeUtil.getParentOfType(this.getPsiElement(offset), PsiMethod::class.java, PsiField::class.java)
+    }
+
     // 特定の要素をスタイリングする
     fun markupElement(element: PsiElement, style: TextAttributes) {
         val range = element.textRange ?: return
@@ -158,4 +171,5 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
 abstract class SourceViewFieldListener {
     open fun onEditorCreated(editor: Editor) {}
     open fun onClickElement(viewer: SourceViewField, element: PsiElement) {}
+    open fun onHoverElement(viewer: SourceViewField, element: PsiElement) {}
 }

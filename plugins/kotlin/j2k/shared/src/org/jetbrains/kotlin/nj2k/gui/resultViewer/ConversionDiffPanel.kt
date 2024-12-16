@@ -4,7 +4,6 @@ package org.jetbrains.kotlin.nj2k.gui.resultViewer
 import com.intellij.icons.AllIcons
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.EffectType
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileTypes.FileType
@@ -13,11 +12,14 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiField
+import com.intellij.psi.PsiIdentifier
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
+import org.jetbrains.kotlin.nj2k.gui.common.SourceViewField
 import org.jetbrains.kotlin.nj2k.gui.common.SourceViewFieldListener
 import org.jetbrains.kotlin.nj2k.gui.filepicker.SourceViewPanel
 import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
@@ -60,6 +62,8 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
         // 追加
         add(beforeViewer.getLabeledPanel())
         add(afterViewer.getLabeledPanel())
+        // イベントハンドラ登録
+        beforeViewer.sourceViewer.addEventListener(BeforeViewerListener())
     }
 
     // 変換前情報をセット
@@ -141,6 +145,23 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
     // エディタが両方生成されているか
     fun isEditorCreated(): Boolean {
         return beforeViewer.sourceViewer.editor != null && afterViewer.sourceViewer.editor != null
+    }
+
+    // 変換前Viewer用イベントハンドラ
+    inner class BeforeViewerListener : SourceViewFieldListener() {
+        override fun onHoverElement(viewer: SourceViewField, element: PsiElement) {
+            // 識別子にホバーした時Tooltipを表示する
+            if(element !is PsiIdentifier) return
+            val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
+            when(parent){
+                is PsiField -> {
+                    println(parent.kotlinFqName)
+                }
+                is PsiMethod -> {
+                    println(parent.kotlinFqName)
+                }
+            }
+        }
     }
 
 }
