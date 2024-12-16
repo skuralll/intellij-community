@@ -9,20 +9,25 @@ import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.UndoConfirmationPolicy
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.editor.event.EditorFactoryEvent
+import com.intellij.openapi.editor.event.EditorFactoryListener
 import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.editor.ex.EditorEx
+import com.intellij.openapi.editor.markup.HighlighterLayer
+import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.EditorTextField
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.psi.KtPsiFactory
@@ -47,6 +52,13 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         setCaretPosition(0)
         // 複数行での表示にする
         isOneLineMode = false
+        // イベントハンドラ登録
+        val disposable = Disposer.newDisposable("EditorFactoryListenerDisposable")
+        EditorFactory.getInstance().addEditorFactoryListener(object : EditorFactoryListener {
+            override fun editorCreated(event: EditorFactoryEvent) {
+                eventListeners.forEach { it.onEditorCreated(event.editor) }
+            }
+        }, disposable)
     }
 
     override fun createEditor(): EditorEx {
@@ -121,20 +133,23 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
 
     // 特定の要素をスタイリングする
     fun styleElement(element: PsiElement, style: TextAttributes) {
-        if(!PsiTreeUtil.isAncestor(psiFile, element, false)) return
+        val range = element.textRange ?: return
+        val markupModel = editor?.markupModel ?: return
+        // ハイライト処理
         ApplicationManager.getApplication().invokeLater {
-            println("This will run when the UI thread is idle.")
+            markupModel.addRangeHighlighter(
+                range.startOffset,
+                range.endOffset,
+                HighlighterLayer.ADDITIONAL_SYNTAX,
+                style,
+                HighlighterTargetArea.EXACT_RANGE
+            )
         }
-        //println("================================")
-        //println("editor : ${editor}")
-        //println("editor : ${editor?.markupModel}")
-        //val markupModel = editor?.markupModel ?: return
-        //markupModel.addRangeHighlighter(element.textRange.startOffset, element.textRange.endOffset, 0, style, HighlighterTargetArea.EXACT_RANGE)
     }
-
 }
 
 // イベントハンドラ (SourceViewFieldで起きたイベントを扱いたい場合，このクラスを継承して実装する)
 abstract class SourceViewFieldListener {
-    fun onClickElement(viewer : SourceViewField, element: PsiElement) {}
+    open fun onEditorCreated(editor: Editor) {}
+    open fun onClickElement(viewer: SourceViewField, element: PsiElement) {}
 }

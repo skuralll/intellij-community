@@ -4,6 +4,7 @@ package org.jetbrains.kotlin.nj2k.gui.resultViewer
 import com.intellij.icons.AllIcons
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.markup.EffectType
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileTypes.FileType
@@ -16,6 +17,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.ui.components.JBPanel
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
+import org.jetbrains.kotlin.nj2k.gui.common.SourceViewFieldListener
 import org.jetbrains.kotlin.nj2k.gui.filepicker.SourceViewPanel
 import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
 import java.awt.Color
@@ -45,6 +47,12 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
         // 追加
         add(beforeViewer.getLabeledPanel())
         add(afterViewer.getLabeledPanel())
+        // イベントハンドラ
+        beforeViewer.sourceViewer.addEventListener(object : SourceViewFieldListener() {
+            override fun onEditorCreated(editor: Editor){
+                highlightBefore()
+            }
+        })
     }
 
     // 変換前情報をセット
