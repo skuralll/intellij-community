@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.nj2k.gui.common.JKFileTreePanel
 import org.jetbrains.kotlin.psi.KtFile
 import java.awt.Dimension
 import javax.swing.JComponent
+import javax.swing.Timer
 
 // 変換プレビュー
 class ResultViewer(
@@ -27,6 +28,10 @@ class ResultViewer(
     private val javaFiles: List<PsiJavaFile>,
     private val ktFiles: List<KtFile>
 ) : DialogWrapper(true), FileTreeListener {
+
+    companion object {
+        private const val INIT_CHECK_PERIOD = 100 // エディタが初期化されているかを確認する感覚
+    }
 
     // UI
     private val fileExplorer: JKFileTreePanel
@@ -41,11 +46,24 @@ class ResultViewer(
         fileExplorer.fileSelectionListeners.add(this)
         fileExplorer.expandFilesNodes(ktFiles.map { it.virtualFile })
         // diff
+        // Timerを使用して1秒後に処理を実行
         diffView = ConversionDiffPanel(project, rootFile)
-        ktFiles.firstOrNull()?.let {
-            fileExplorer.focusFile(it.virtualFile) // 最初のファイルにフォーカスする
-            switchFile(it.virtualFile) // 最初のファイルを初期表示
+        // エディタが初期化されているかを確認し，初期化されていれば最初のファイルを表示する
+        Timer(INIT_CHECK_PERIOD) { event ->
+            if(diffView.isEditorCreated()){
+                ktFiles.firstOrNull()?.let { file ->
+                    fileExplorer.focusFile(file.virtualFile)
+                    switchFile(file.virtualFile)
+                }
+                event.source?.let { timerSource ->
+                    (timerSource as Timer).stop()
+                }
+            }
+        }.apply {
+            isRepeats = true
+            start()
         }
+        // 初期化
         init()
     }
 

@@ -24,6 +24,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -132,10 +133,14 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
     }
 
     // 特定の要素をスタイリングする
-    fun styleElement(element: PsiElement, style: TextAttributes) {
+    fun markupElement(element: PsiElement, style: TextAttributes) {
         val range = element.textRange ?: return
+        markup(range, style)
+    }
+
+    // 特定の範囲をスタイリングする
+    fun markup(range: TextRange, style: TextAttributes){
         val markupModel = editor?.markupModel ?: return
-        // ハイライト処理
         ApplicationManager.getApplication().invokeLater {
             markupModel.addRangeHighlighter(
                 range.startOffset,
@@ -146,6 +151,7 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
             )
         }
     }
+
 }
 
 // イベントハンドラ (SourceViewFieldで起きたイベントを扱いたい場合，このクラスを継承して実装する)

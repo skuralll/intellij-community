@@ -14,19 +14,32 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMethod
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
 import org.jetbrains.kotlin.nj2k.gui.common.SourceViewFieldListener
 import org.jetbrains.kotlin.nj2k.gui.filepicker.SourceViewPanel
 import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
-import java.awt.Color
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtProperty
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.GridLayout
 import javax.swing.Icon
 
+// TODO : beforeViewerとafterViewer共通の処理を一つにまとめる
 class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel<*>>(GridLayout(1, 2)) {
+
+    companion object {
+        private val CONVERTED_TEXT_ATTRIBUTE = TextAttributes(
+            null,
+            JBColor.lightGray,
+            JBColor.ORANGE,
+            EffectType.SLIGHTLY_WIDER_BOX,
+            Font.PLAIN
+        )
+    }
 
     // ソースビューア
     private val beforeViewer = SourceViewPanel(null, project, JavaFileType.INSTANCE)
@@ -47,18 +60,11 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
         // 追加
         add(beforeViewer.getLabeledPanel())
         add(afterViewer.getLabeledPanel())
-        // イベントハンドラ
-        beforeViewer.sourceViewer.addEventListener(object : SourceViewFieldListener() {
-            override fun onEditorCreated(editor: Editor){
-                highlightBefore()
-            }
-        })
     }
 
     // 変換前情報をセット
     fun setBefore(document: Document?, fileType: FileType) {
         beforeViewer.switchFile(document, fileType)
-        beforeViewer.label.icon = fileType.icon
         beforeViewer.label.icon = getFileIcon(document, fileType)
         // ハイライト
         highlightBefore()
@@ -68,6 +74,8 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
     fun setAfter(document: Document?, fileType: FileType) {
         afterViewer.switchFile(document, fileType)
         afterViewer.label.icon = getFileIcon(document, fileType)
+        // ハイライト
+        highlightAfter()
     }
 
     // ファイルに適したアイコンを取得するメソッド
@@ -80,19 +88,21 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
 
     // 変換前のハイライト
     private fun highlightBefore() {
-        val fqNames = ConversionRecorder.getJavaFqNames()
         // 探索
         beforeViewer.sourceViewer.psiFile?.accept(object : PsiElementVisitor() {
             override fun visitElement(element: PsiElement) {
                 when (element) {
-                    is PsiMethod, is PsiField -> {
-                        val fqName = element.kotlinFqName.toString()
-                        if (fqNames.contains(fqName)) {
-                            beforeViewer.sourceViewer.styleElement(
-                                element, TextAttributes(
-                                    null, null, Color.RED, EffectType.LINE_UNDERSCORE,
-                                    Font.PLAIN
-                                )
+                    is PsiField -> {
+                        ConversionRecorder.getEntryByJavaFqName(element.kotlinFqName.toString())?.let {
+                            beforeViewer.sourceViewer.markup(element.nameIdentifier.textRange, CONVERTED_TEXT_ATTRIBUTE)
+                        }
+                    }
+
+                    is PsiMethod -> {
+                        ConversionRecorder.getEntryByJavaFqName(element.kotlinFqName.toString())?.let {
+                            beforeViewer.sourceViewer.markup(
+                                element.nameIdentifier?.textRange ?: element.textRange,
+                                CONVERTED_TEXT_ATTRIBUTE
                             )
                         }
                     }
@@ -100,6 +110,37 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
                 element.acceptChildren(this)
             }
         })
+    }
+
+    // 変換後のハイライト
+    private fun highlightAfter() {
+        // 探索
+        afterViewer.sourceViewer.psiFile?.accept(object : PsiElementVisitor() {
+            override fun visitElement(element: PsiElement) {
+                when (element) {
+                    is KtProperty -> {
+                        ConversionRecorder.getEntryByKotlinFqName(element.kotlinFqName.toString())?.let {
+                            afterViewer.sourceViewer.markup(element.nameIdentifier?.textRange ?: element.textRange, CONVERTED_TEXT_ATTRIBUTE)
+                        }
+                    }
+
+                    is KtFunction -> {
+                        ConversionRecorder.getEntryByKotlinFqName(element.kotlinFqName.toString())?.let {
+                            afterViewer.sourceViewer.markup(
+                                element.nameIdentifier?.textRange ?: element.textRange,
+                                CONVERTED_TEXT_ATTRIBUTE
+                            )
+                        }
+                    }
+                }
+                element.acceptChildren(this)
+            }
+        })
+    }
+
+    // エディタが両方生成されているか
+    fun isEditorCreated(): Boolean {
+        return beforeViewer.sourceViewer.editor != null && afterViewer.sourceViewer.editor != null
     }
 
 }

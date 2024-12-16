@@ -67,6 +67,16 @@ object ConversionRecorder {
         return entries.map { it.javaFq }
     }
 
+    // 変換前の完全修飾名から変換記録を取得する
+    fun getEntryByJavaFqName(javaFqName: String): ConversionEntry? {
+        return entries.find { it.javaFq == javaFqName }
+    }
+
+    // 変換後の完全修飾名から変換記録を取得する
+    fun getEntryByKotlinFqName(kotlinFqName: String): ConversionEntry? {
+        return entries.find { it.ktFq == kotlinFqName }
+    }
+
     // Javaの完全修飾名を取得する
     private fun getJavaFqName(psiElement: PsiElement): String {
         //return when (psiElement) {
