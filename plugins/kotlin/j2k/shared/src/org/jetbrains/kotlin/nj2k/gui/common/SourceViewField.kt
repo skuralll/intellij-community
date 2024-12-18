@@ -28,8 +28,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.EditorTextField
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
-import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.nj2k.getIdentifier
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import java.awt.Point
 
@@ -149,6 +148,23 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         return PsiTreeUtil.getParentOfType(this.getPsiElement(offset), PsiMethod::class.java, PsiField::class.java)
     }
 
+    // 指定したfqNameのPsiElementを取得する
+    fun getIdentifier(fqName: String): PsiElement? {
+        var result : PsiElement? = null
+        psiFile?.accept(object : PsiElementVisitor() {
+            override fun visitElement(element: PsiElement) {
+                element.getIdentifier()?.let { identifier ->
+                    if(identifier.kotlinFqName.toString() == fqName){
+                        result = identifier
+                        return
+                    }
+                }
+                element.acceptChildren(this)
+            }
+        })
+        return result
+    }
+
     // 特定の要素をスタイリングする
     fun markupElement(element: PsiElement, style: TextAttributes) {
         val range = element.textRange ?: return
@@ -175,18 +191,22 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
     }
 
     // 指定要素までスクロールする
-    fun scrollToElement(fqName: String) {
+    fun scrollToElement(target: PsiElement) {
         psiFile ?: return
-        val target = PsiTreeUtil.findChildrenOfAnyType(
-                psiFile,
-                KtNamedFunction::class.java,
-                KtProperty::class.java,
-                PsiField::class.java,
-                PsiMethod::class.java
-        ).firstOrNull { element ->
-            element.kotlinFqName.toString() == fqName
-        }
-        target?.nameIdentifier?.textOffset?.let { scrollToLine(it) }
+        psiFile?.accept(object : PsiElementVisitor() {
+            override fun visitElement(element: PsiElement) {
+                if(element == target){
+                    scrollToLine(element.textOffset)
+                    return
+                }
+                element.acceptChildren(this)
+            }
+        })
+    }
+
+    fun scrollToElement(fqName: String) {
+        val target = getIdentifier(fqName)
+        target?.let { scrollToElement(it) }
     }
 
 }

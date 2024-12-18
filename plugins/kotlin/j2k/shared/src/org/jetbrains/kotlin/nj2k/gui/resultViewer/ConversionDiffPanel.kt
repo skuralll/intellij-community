@@ -33,8 +33,15 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
     companion object {
         private val CONVERTED_TEXT_ATTRIBUTE = TextAttributes(
             null,
-            JBColor.lightGray,
-            JBColor.ORANGE,
+            JBColor.LIGHT_GRAY,
+            JBColor.LIGHT_GRAY,
+            EffectType.SLIGHTLY_WIDER_BOX,
+            Font.PLAIN
+        )
+        private val MATCH_TEXT_ATTRIBUTE = TextAttributes(
+            null,
+            JBColor.LIGHT_GRAY,
+            JBColor.PINK,
             EffectType.SLIGHTLY_WIDER_BOX,
             Font.PLAIN
         )
@@ -146,6 +153,8 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
 
     // 変換前Viewer用イベントハンドラ
     inner class BeforeViewerListener : SourceViewFieldListener() {
+        private var marked : PsiElement? = null
+
         override fun onHoverElement(viewer: SourceViewField, element: PsiElement, point: Point) {
             // 識別子にホバーした時Tooltipを表示する
             if(element !is PsiIdentifier) return
@@ -165,7 +174,14 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
             if(element !is PsiIdentifier) return
             val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
             val entry = ConversionRecorder.getEntryByJavaFqName(parent?.kotlinFqName.toString()) ?: return
-            afterViewer.sourceViewer.scrollToElement(entry.ktFq)
+            afterViewer.sourceViewer.getIdentifier(entry.ktFq)?.let { target ->
+                // 移動
+                afterViewer.sourceViewer.scrollToElement(target)
+                // マークアップ
+                marked?.let { afterViewer.sourceViewer.markup(it.textRange, CONVERTED_TEXT_ATTRIBUTE) }
+                afterViewer.sourceViewer.markup(target.textRange, MATCH_TEXT_ATTRIBUTE)
+                marked = target
+            }
         }
     }
 
