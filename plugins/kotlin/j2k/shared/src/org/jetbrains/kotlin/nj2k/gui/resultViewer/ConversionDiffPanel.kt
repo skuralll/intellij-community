@@ -9,11 +9,7 @@ import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.PsiField
-import com.intellij.psi.PsiIdentifier
-import com.intellij.psi.PsiMethod
+import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
@@ -28,6 +24,7 @@ import org.jetbrains.kotlin.psi.KtProperty
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.GridLayout
+import java.awt.Point
 import javax.swing.Icon
 
 // TODO : beforeViewerとafterViewer共通の処理を一つにまとめる
@@ -149,16 +146,16 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
 
     // 変換前Viewer用イベントハンドラ
     inner class BeforeViewerListener : SourceViewFieldListener() {
-        override fun onHoverElement(viewer: SourceViewField, element: PsiElement) {
+        override fun onHoverElement(viewer: SourceViewField, element: PsiElement, point: Point) {
             // 識別子にホバーした時Tooltipを表示する
             if(element !is PsiIdentifier) return
             val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
             when(parent){
                 is PsiField -> {
-                    println(parent.kotlinFqName)
+                    // todo ヒントポップアップを表示できるようにする
                 }
                 is PsiMethod -> {
-                    println(parent.kotlinFqName)
+                    // todo ヒントポップアップを表示できるようにする
                 }
             }
         }

@@ -28,6 +28,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.EditorTextField
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.psi.KtPsiFactory
+import java.awt.Point
 
 class SourceViewField(document: Document?, project: Project, fileType: FileType, isViewer: Boolean) :
     EditorTextField(document ?: getEmptyDocument(), project, fileType, isViewer) {
@@ -74,7 +75,7 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         editor.addEditorMouseMotionListener(object : EditorMouseMotionListener{
             override fun mouseMoved(event: EditorMouseEvent) {
                 psiFile?.getPsiElement(event.offset)?.let { element ->
-                    onHoverElement(element)
+                    onHoverElement(element, event.mouseEvent.point)
                 }
             }
         })
@@ -92,8 +93,8 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
     }
 
     // ファイル内の要素をホバーしたときに呼ばれる
-    private fun onHoverElement(element: PsiElement) {
-        eventListeners.forEach { it.onHoverElement(this, element) }
+    private fun onHoverElement(element: PsiElement, point: Point) {
+        eventListeners.forEach { it.onHoverElement(this, element, point) }
     }
 
     // ファイル切り替えメソッド
@@ -171,5 +172,5 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
 abstract class SourceViewFieldListener {
     open fun onEditorCreated(editor: Editor) {}
     open fun onClickElement(viewer: SourceViewField, element: PsiElement) {}
-    open fun onHoverElement(viewer: SourceViewField, element: PsiElement) {}
+    open fun onHoverElement(viewer: SourceViewField, element: PsiElement, point: Point) {}
 }
