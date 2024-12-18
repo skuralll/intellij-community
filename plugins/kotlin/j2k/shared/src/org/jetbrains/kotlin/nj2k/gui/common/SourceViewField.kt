@@ -209,6 +209,11 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
         target?.let { scrollToElement(it) }
     }
 
+    // キャレットを動かす
+    fun moveCaret(offset: Int) {
+        editor?.caretModel?.moveToOffset(offset)
+    }
+
 }
 
 // イベントハンドラ (SourceViewFieldで起きたイベントを扱いたい場合，このクラスを継承して実装する)

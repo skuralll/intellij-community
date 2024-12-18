@@ -1,6 +1,7 @@
 // Copyright 2000-2024 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package org.jetbrains.kotlin.nj2k.gui.resultViewer
 
+import com.intellij.codeInsight.hint.HintManager
 import com.intellij.icons.AllIcons
 import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.openapi.editor.Document
@@ -9,8 +10,12 @@ import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.*
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiField
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.startOffset
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import org.jetbrains.kotlin.idea.KotlinFileType
@@ -18,7 +23,10 @@ import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
 import org.jetbrains.kotlin.nj2k.gui.common.SourceViewField
 import org.jetbrains.kotlin.nj2k.gui.common.SourceViewFieldListener
 import org.jetbrains.kotlin.nj2k.gui.filepicker.SourceViewPanel
+import org.jetbrains.kotlin.nj2k.log.ConversionEntry
 import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
+import org.jetbrains.kotlin.nj2k.log.FunctionModifierEntry
+import org.jetbrains.kotlin.nj2k.log.PropertyModifierEntry
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtProperty
 import java.awt.Dimension
@@ -155,6 +163,22 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
         return beforeViewer.sourceViewer.editor != null && afterViewer.sourceViewer.editor != null
     }
 
+    // ポップアップヒントに表示するコンポーネントを取得する TODO : 改善
+    fun getHintMessage(entry : ConversionEntry): String {
+        return when(entry){
+            is PropertyModifierEntry -> {
+                val name = entry.javaFq.split(".").last()
+                when{
+                    name.startsWith("get") -> "Converted to property getter"
+                    name.startsWith("set") -> "Converted to property setter"
+                    else -> "Converted to property"
+                }
+            }
+            is FunctionModifierEntry -> "Converted to function"
+            else -> "Unknown Modifier"
+        }
+    }
+
     // 変換前Viewer用イベントハンドラ
     inner class BeforeViewerListener : SourceViewFieldListener() {
         private var markedBefore: PsiElement? = null
@@ -162,24 +186,22 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
 
         override fun onHoverElement(viewer: SourceViewField, element: PsiElement, point: Point) {
             // 識別子にホバーした時Tooltipを表示する
-            if (element !is PsiIdentifier) return
             val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
-            when (parent) {
-                is PsiField -> {
-                    // todo ヒントポップアップを表示できるようにする
-                }
-
-                is PsiMethod -> {
-                    // todo ヒントポップアップを表示できるようにする
-                }
+            if(parent?.nameIdentifier != element) return
+            val entry = ConversionRecorder.getEntryByJavaFqName(parent.kotlinFqName.toString()) ?: return
+            // キャレット移動
+            parent.nameIdentifier?.let { viewer.moveCaret(it.startOffset) }
+            // ヒント表示
+            viewer.editor?.let {
+                HintManager.getInstance().showInformationHint(it, getHintMessage(entry))
             }
         }
 
         override fun onClickElement(viewer: SourceViewField, element: PsiElement) {
             // 識別子をクリックした時afterViewerの変換後要素に移動する
-            if (element !is PsiIdentifier) return
             val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
-            val entry = ConversionRecorder.getEntryByJavaFqName(parent?.kotlinFqName.toString()) ?: return
+            if(parent?.nameIdentifier != element) return
+            val entry = ConversionRecorder.getEntryByJavaFqName(parent.kotlinFqName.toString()) ?: return
             markAndScroll(beforeViewer.sourceViewer, entry.javaFq, ::markedBefore)
             markAndScroll(afterViewer.sourceViewer, entry.ktFq, ::markedAfter, true)
         }
