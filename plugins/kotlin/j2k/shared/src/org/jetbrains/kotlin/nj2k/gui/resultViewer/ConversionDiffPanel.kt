@@ -26,6 +26,7 @@ import java.awt.Font
 import java.awt.GridLayout
 import java.awt.Point
 import javax.swing.Icon
+import kotlin.reflect.KMutableProperty0
 
 // TODO : beforeViewerとafterViewer共通の処理を一つにまとめる
 class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBPanel<*>>(GridLayout(1, 2)) {
@@ -33,8 +34,15 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
     companion object {
         private val CONVERTED_TEXT_ATTRIBUTE = TextAttributes(
             null,
-            JBColor.lightGray,
-            JBColor.ORANGE,
+            JBColor.LIGHT_GRAY,
+            JBColor.LIGHT_GRAY,
+            EffectType.SLIGHTLY_WIDER_BOX,
+            Font.PLAIN
+        )
+        private val MATCH_TEXT_ATTRIBUTE = TextAttributes(
+            null,
+            JBColor.LIGHT_GRAY,
+            JBColor.PINK,
             EffectType.SLIGHTLY_WIDER_BOX,
             Font.PLAIN
         )
@@ -121,7 +129,10 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
                 when (element) {
                     is KtProperty -> {
                         ConversionRecorder.getEntryByKotlinFqName(element.kotlinFqName.toString())?.let {
-                            afterViewer.sourceViewer.markup(element.nameIdentifier?.textRange ?: element.textRange, CONVERTED_TEXT_ATTRIBUTE)
+                            afterViewer.sourceViewer.markup(
+                                element.nameIdentifier?.textRange ?: element.textRange,
+                                CONVERTED_TEXT_ATTRIBUTE
+                            )
                         }
                     }
 
@@ -146,17 +157,47 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
 
     // 変換前Viewer用イベントハンドラ
     inner class BeforeViewerListener : SourceViewFieldListener() {
+        private var markedBefore: PsiElement? = null
+        private var markedAfter: PsiElement? = null
+
         override fun onHoverElement(viewer: SourceViewField, element: PsiElement, point: Point) {
             // 識別子にホバーした時Tooltipを表示する
-            if(element !is PsiIdentifier) return
+            if (element !is PsiIdentifier) return
             val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
-            when(parent){
+            when (parent) {
                 is PsiField -> {
                     // todo ヒントポップアップを表示できるようにする
                 }
+
                 is PsiMethod -> {
                     // todo ヒントポップアップを表示できるようにする
                 }
+            }
+        }
+
+        override fun onClickElement(viewer: SourceViewField, element: PsiElement) {
+            // 識別子をクリックした時afterViewerの変換後要素に移動する
+            if (element !is PsiIdentifier) return
+            val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
+            val entry = ConversionRecorder.getEntryByJavaFqName(parent?.kotlinFqName.toString()) ?: return
+            markAndScroll(beforeViewer.sourceViewer, entry.javaFq, ::markedBefore)
+            markAndScroll(afterViewer.sourceViewer, entry.ktFq, ::markedAfter, true)
+        }
+
+        // 指定したビューアにマークアップし，スクロールする
+        private fun markAndScroll(
+            viewer: SourceViewField,
+            fqName: String,
+            markedElement: KMutableProperty0<PsiElement?>,
+            shouldScroll: Boolean = false
+        ) {
+            viewer.getIdentifier(fqName)?.let { target ->
+                if (shouldScroll) {
+                    viewer.scrollToElement(target)
+                }
+                markedElement.get()?.let { viewer.markup(it.textRange, CONVERTED_TEXT_ATTRIBUTE) }
+                viewer.markup(target.textRange, MATCH_TEXT_ATTRIBUTE)
+                markedElement.set(target)
             }
         }
     }

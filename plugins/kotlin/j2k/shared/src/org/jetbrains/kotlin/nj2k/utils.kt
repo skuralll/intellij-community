@@ -4,9 +4,12 @@ package org.jetbrains.kotlin.nj2k
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNameIdentifierOwner
 import org.jetbrains.kotlin.lexer.KtKeywordToken
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.load.java.JvmAbi
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.decapitalizeAsciiOnly
 
 inline fun <T> List<T>.mutate(mutate: MutableList<T>.() -> Unit): List<T> {
@@ -53,5 +56,14 @@ fun VirtualFile.getRelativePath(project: Project): String? {
         virtualFilePath.removePrefix("$projectBasePath/")
     } else {
         null
+    }
+}
+
+// PsiElementから識別子を取得する
+fun PsiElement.getIdentifier(): PsiElement? {
+    return when (this) {
+        is KtNamedDeclaration -> nameIdentifier
+        is PsiNameIdentifierOwner -> nameIdentifier
+        else -> null
     }
 }
