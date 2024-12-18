@@ -159,6 +159,14 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
                 }
             }
         }
+
+        override fun onClickElement(viewer: SourceViewField, element: PsiElement) {
+            // 識別子にホバーした時afterViewerの変換後要素に移動する
+            if(element !is PsiIdentifier) return
+            val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
+            val entry = ConversionRecorder.getEntryByJavaFqName(parent?.kotlinFqName.toString()) ?: return
+            afterViewer.sourceViewer.scrollToElement(entry.ktFq)
+        }
     }
 
 }

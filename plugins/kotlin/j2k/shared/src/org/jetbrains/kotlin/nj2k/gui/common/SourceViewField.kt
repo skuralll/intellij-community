@@ -27,6 +27,9 @@ import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.EditorTextField
 import org.jetbrains.kotlin.idea.KotlinFileType
+import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import java.awt.Point
 
@@ -72,7 +75,7 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
                 }
             }
         })
-        editor.addEditorMouseMotionListener(object : EditorMouseMotionListener{
+        editor.addEditorMouseMotionListener(object : EditorMouseMotionListener {
             override fun mouseMoved(event: EditorMouseEvent) {
                 psiFile?.getPsiElement(event.offset)?.let { element ->
                     onHoverElement(element, event.mouseEvent.point)
@@ -153,7 +156,7 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
     }
 
     // 特定の範囲をスタイリングする
-    fun markup(range: TextRange, style: TextAttributes){
+    fun markup(range: TextRange, style: TextAttributes) {
         val markupModel = editor?.markupModel ?: return
         ApplicationManager.getApplication().invokeLater {
             markupModel.addRangeHighlighter(
@@ -164,6 +167,26 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
                 HighlighterTargetArea.EXACT_RANGE
             )
         }
+    }
+
+    // N文字目の行までスクロールする
+    fun scrollToLine(offset: Int) {
+        editor?.scrollingModel?.scrollTo(editor?.offsetToLogicalPosition(offset) ?: return, ScrollType.CENTER)
+    }
+
+    // 指定要素までスクロールする
+    fun scrollToElement(fqName: String) {
+        psiFile ?: return
+        val target = PsiTreeUtil.findChildrenOfAnyType(
+                psiFile,
+                KtNamedFunction::class.java,
+                KtProperty::class.java,
+                PsiField::class.java,
+                PsiMethod::class.java
+        ).firstOrNull { element ->
+            element.kotlinFqName.toString() == fqName
+        }
+        target?.nameIdentifier?.textOffset?.let { scrollToLine(it) }
     }
 
 }
