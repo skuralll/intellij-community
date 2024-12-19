@@ -242,8 +242,11 @@ class JKCodeBuilder(private val context: NewJ2kConverterContext) {
             if (field.hasAnnotations) {
                 ensureLineBreak()
             }
+
             renderModifiersList(field)
+            printInferenceLabel(field) // logging プライマリコンストラクタの場合，ラベルとプロパティ名の間に強制的にスペースが入る
             field.name.accept(this)
+
             if (field.type.isPresent()) {
                 printer.print(": ")
                 field.type.accept(this)

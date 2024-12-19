@@ -2,6 +2,8 @@
 
 package org.jetbrains.kotlin.nj2k
 
+import org.jetbrains.kotlin.nj2k.tree.JKElement
+import org.jetbrains.kotlin.nj2k.tree.JKTreeElement
 import org.jetbrains.kotlin.utils.SmartList
 import kotlin.random.Random
 
@@ -55,6 +57,10 @@ class JKElementInfoStorage {
     fun getOrCreateExplicitLabelForElement(element: Any): JKElementInfoLabel =
         elementToLabel.getOrPut(element) { JKElementInfoExplicitLabel(createRandomString()) }
 
+    // for debugging
+    fun getLabelForElement(element: Any): JKElementInfoLabel? =
+        elementToLabel[element]
+
     fun getInfoForLabel(label: JKElementInfoLabel): List<JKElementInfo>? =
         labelToInfo[label]
 
@@ -62,6 +68,25 @@ class JKElementInfoStorage {
         val label = elementToLabel.getOrPut(element) { JKElementInfoInferenceLabel(createRandomString()) }
         labelToInfo.getOrPut(label) { SmartList() } += info
         elementToLabel[element] = label
+    }
+
+    fun addInfo(label: JKElementInfoLabel, info: JKElementInfo) {
+        //println("==========")
+        //println("label : ${label.render()}")
+        if (labelToInfo[label] == null) return
+        labelToInfo[label]?.add(info)
+        //println("done.")
+    }
+
+    // for debugging
+    fun printAllLabels() {
+        elementToLabel.forEach { (element, label) ->
+            println("========================================")
+            println("element : $element")
+            labelToInfo[label]?.forEach { info ->
+                println("info : $info")
+            }
+        }
     }
 
     companion object {
