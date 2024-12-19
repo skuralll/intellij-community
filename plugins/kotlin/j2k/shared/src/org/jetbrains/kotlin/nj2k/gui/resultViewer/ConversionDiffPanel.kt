@@ -76,8 +76,7 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
         add(beforeViewer.getLabeledPanel())
         add(afterViewer.getLabeledPanel())
         // イベントハンドラ登録
-        beforeViewer.sourceViewer.addEventListener(ViewerSyncListener(beforeViewer.sourceViewer, afterViewer.sourceViewer))
-        //afterViewer.sourceViewer.addEventListener(ViewerSyncListener(afterViewer.sourceViewer, beforeViewer.sourceViewer))
+        beforeViewer.sourceViewer.addEventListener(BeforeViewerListener())
     }
 
     // 変換前情報をセット
@@ -181,49 +180,47 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
         }
     }
 
-    inner class ViewerSyncListener(
-        private val currentViewer: SourceViewField,
-        private val counterpartViewer: SourceViewField
-    ) : SourceViewFieldListener() {
+    // 変換前Viewer用イベントハンドラ
+    inner class BeforeViewerListener : SourceViewFieldListener() {
         // ホバーしている要素
-        private var hoveredElement: PsiElement? = null
+        private var hoveredBefore: PsiElement? = null
 
         // マークアップしている要素
-        private var markedCurrent: PsiElement? = null
-        private var markedCounterpart: PsiElement? = null
+        private var markedBefore: PsiElement? = null
+        private var markedAfter: PsiElement? = null
 
         override fun onHoverElement(viewer: SourceViewField, element: PsiElement, point: Point) {
-            // ホバーした要素の変換詳細を表示する
-            // 識別子以外をホバーしていたら何もしない
+            // 識別子にホバーした時Tooltipを表示する
+            // 識別子でない場合は無視
             val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
             if (parent?.nameIdentifier != element) {
-                hoveredElement = null
+                hoveredBefore = null
                 HintManager.getInstance().hideAllHints()
                 return
             }
-            // すでにホバーしている要素だったら何もしない
-            if (hoveredElement == element) return
+            // 同じ要素にホバーしている場合は無視，違う要素の場合既存のヒントを消す
+            if (hoveredBefore == element) return
             HintManager.getInstance().hideAllHints()
-            // ヒントを表示
+            // ヒント表示
             val entry = ConversionRecorder.getEntryByJavaFqName(parent.kotlinFqName.toString()) ?: return
             parent.nameIdentifier?.let { viewer.moveCaret(it.startOffset) }
             viewer.editor?.let {
                 HintManager.getInstance().showInformationHint(it, getHintMessage(entry))
             }
-            hoveredElement = element
+            // ホバー中のエレメントを更新
+            hoveredBefore = element
         }
 
         override fun onClickElement(viewer: SourceViewField, element: PsiElement) {
+            // 識別子をクリックした時afterViewerの変換後要素に移動する
             val parent = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java, PsiField::class.java)
             if (parent?.nameIdentifier != element) return
             val entry = ConversionRecorder.getEntryByJavaFqName(parent.kotlinFqName.toString()) ?: return
-            // 現在のビューアの要素をハイライト
-            markAndScroll(currentViewer, entry.javaFq, ::markedCurrent)
-            // 対応するビューアの要素をハイライト・スクロール
-            markAndScroll(counterpartViewer, entry.ktFq, ::markedCounterpart, true)
+            markAndScroll(beforeViewer.sourceViewer, entry.javaFq, ::markedBefore)
+            markAndScroll(afterViewer.sourceViewer, entry.ktFq, ::markedAfter, true)
         }
 
-        // 特定の要素までスクロールしてマークアップする
+        // 指定したビューアにマークアップし，スクロールする
         private fun markAndScroll(
             viewer: SourceViewField,
             fqName: String,
@@ -240,6 +237,5 @@ class ConversionDiffPanel(project: Project, rootFile: VirtualFile) : JBPanel<JBP
             }
         }
     }
-
 
 }
