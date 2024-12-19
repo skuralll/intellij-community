@@ -53,7 +53,7 @@ import org.jetbrains.kotlin.j2k.*
 import org.jetbrains.kotlin.j2k.ConverterSettings.Companion.defaultSettings
 import org.jetbrains.kotlin.j2k.J2kConverterExtension.Kind.*
 import org.jetbrains.kotlin.nj2k.gui.filepicker.FilePicker
-import org.jetbrains.kotlin.nj2k.gui.previewer.Previewer
+import org.jetbrains.kotlin.nj2k.gui.resultViewer.ResultViewer
 import org.jetbrains.kotlin.nj2k.log.ConversionRecorder
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
@@ -161,8 +161,8 @@ class JavaToKotlinAction : AnAction() {
             snapShot.finish() // スナップショット保存
 
             // 完全な変換/Undoが行われるまでプレビューを表示し続ける
-            val previewer = Previewer(project, project.guessProjectDir()!!, javaFiles, newFiles)
-            while (!previewer.showAndGet()) {
+            val resultViewer = ResultViewer(project, project.guessProjectDir()!!, javaFiles, newFiles)
+            while (!resultViewer.showAndGet()) {
                 UndoManager.getInstance(project).undo(null)
                 if (!isConverted(newFiles)) break // Undoがキャンセルされた場合ループ継続
             }
