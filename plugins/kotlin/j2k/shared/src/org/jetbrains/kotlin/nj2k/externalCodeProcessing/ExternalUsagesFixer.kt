@@ -51,7 +51,7 @@ class ExternalUsagesFixer(private val usages: List<JKMemberInfoWithUsages>) {
             ktProperty.canBeAnnotatedWithJvmField() ->
                 ktProperty.addJvmFieldAnnotationIfThereAreNoJvmAnnotations()
 
-            isStatic && !ktProperty.hasModifier(CONST_KEYWORD) ->
+            isStatic /*&& !ktProperty.hasModifier(CONST_KEYWORD)*/ ->
                 ktProperty.addJvmStaticAnnotationIfThereAreNoJvmAnnotations()
         }
     }
@@ -65,7 +65,7 @@ class ExternalUsagesFixer(private val usages: List<JKMemberInfoWithUsages>) {
                 element.canBeAnnotatedWithJvmField() ->
                     element.addJvmFieldAnnotationIfThereAreNoJvmAnnotations()
 
-                isStatic && !element.isConstProperty() ->
+                isStatic /*&& !element.isConstProperty()*/ ->
                     element.addJvmStaticAnnotationIfThereAreNoJvmAnnotations()
             }
         }
@@ -111,6 +111,7 @@ class ExternalUsagesFixer(private val usages: List<JKMemberInfoWithUsages>) {
 
     private fun KtNamedDeclaration.addJvmStaticAnnotationIfThereAreNoJvmAnnotations() {
         if (hasJvmAnnotations()) return
+        if (hasModifier(CONST_KEYWORD)) removeModifier(CONST_KEYWORD)
         jvmStaticAnnotatedDeclarations.add(this)
         addAnnotation(JVM_STATIC)
     }
