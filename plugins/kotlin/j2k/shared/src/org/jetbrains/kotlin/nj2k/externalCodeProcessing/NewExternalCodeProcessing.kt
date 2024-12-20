@@ -107,6 +107,7 @@ class NewExternalCodeProcessing(
         progress?.text = KotlinNJ2KBundle.message("progress.searching.usages.to.update")
 
         val externalUsages = mutableListOf<ExternalUsagesFixer.JKMemberInfoWithUsages>()
+        val internalUsages = mutableListOf<ExternalUsagesFixer.JKMemberInfoWithUsages>()
         for ((index, member) in members.values.withIndex()) {
             if (progress != null) {
                 progress.text2 = member.fqName?.shortName()?.identifier ?: continue
@@ -116,17 +117,20 @@ class NewExternalCodeProcessing(
                     {
                         val usages = member.collectUsages()
                         externalUsages += usages.external
+                        internalUsages += usages.internal
                     },
                     ProgressPortionReporter(progress, index / members.size.toDouble(), 1.0 / members.size)
                 )
             } else {
                 val usages = member.collectUsages()
                 externalUsages += usages.external
+                internalUsages += usages.internal
             }
         }
         return {
             ExternalUsagesFixer(externalUsages).fix()
             // TODO : ここに独自の後処理を追加する(メソッド呼び出しをプロパティ参照に変えるなど．これにはJKMemberDataを流用できそうなので，ExternalCodeProcessingの一部として実装する)
+            // TODO : internalUsagesを使う
         }
     }
 
