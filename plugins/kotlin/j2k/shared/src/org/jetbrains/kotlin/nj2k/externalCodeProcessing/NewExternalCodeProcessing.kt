@@ -131,6 +131,9 @@ class NewExternalCodeProcessing(
             ExternalUsagesFixer(externalUsages).fix()
             // TODO : ここに独自の後処理を追加する(メソッド呼び出しをプロパティ参照に変えるなど．これにはJKMemberDataを流用できそうなので，ExternalCodeProcessingの一部として実装する)
             // TODO : internalUsagesを使う
+            internalUsages.forEach{
+                println("${it.member.name}  Java: ${it.javaUsages.size}  Kotlin: ${it.kotlinUsages.size}")
+            }
         }
     }
 
@@ -148,7 +151,7 @@ class NewExternalCodeProcessing(
             searchKotlin = searchInKotlinFiles
         ).forEach { usage ->
             val element = usage.element
-            if (isInConversionContext(element)) return@forEach
+            if(javaElement.containingFile == element.containingFile) return@forEach // 同一ファイルからの参照は弾く
             when {
                 element is KtElement -> if (isInConversionContext(element)) kotlinUsagesInternal += element else kotlinUsagesExternal += element
                 element.language == JavaLanguage.INSTANCE -> if (isInConversionContext(element)) javaUsagesInternal += element else javaUsagesExternal += element
