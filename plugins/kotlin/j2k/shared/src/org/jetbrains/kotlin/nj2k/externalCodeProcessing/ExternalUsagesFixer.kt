@@ -129,6 +129,12 @@ class ExternalUsagesFixer(private val usages: List<JKMemberInfoWithUsages>) {
         val javaUsages: List<PsiElement>,
         val kotlinUsages: List<KtElement>
     )
+
+    // 変換対象外の呼び出しと対象の呼び出しをペアにして保持する
+    data class JKMemberInfoWithUsagesPair(
+        val internal : JKMemberInfoWithUsages,
+        val external : JKMemberInfoWithUsages
+    )
 }
 
 private const val JVM_FIELD: String = "kotlin.jvm.JvmField"
