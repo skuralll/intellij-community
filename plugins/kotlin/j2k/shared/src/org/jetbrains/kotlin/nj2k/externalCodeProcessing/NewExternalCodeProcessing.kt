@@ -131,9 +131,9 @@ class NewExternalCodeProcessing(
             ExternalUsagesFixer(externalUsages).fix()
             // TODO : ここに独自の後処理を追加する(メソッド呼び出しをプロパティ参照に変えるなど．これにはJKMemberDataを流用できそうなので，ExternalCodeProcessingの一部として実装する)
             // TODO : internalUsagesを使う
-            internalUsages.forEach{
-                println("${it.member.name}  Java: ${it.javaUsages.size}  Kotlin: ${it.kotlinUsages.size}")
-            }
+            //internalUsages.forEach{
+            //    println("${it.member.name}  Java: ${it.javaUsages.size}  Kotlin: ${it.kotlinUsages.size}")
+            //}
         }
     }
 
