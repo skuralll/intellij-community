@@ -20,7 +20,6 @@ import org.jetbrains.kotlin.j2k.NamedPostProcessingGroup
 import org.jetbrains.kotlin.j2k.postProcessings.*
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.idea.j2k.post.processing.processings.LoggingProcessing
-import org.jetbrains.kotlin.j2k.PostProcessing
 import org.jetbrains.kotlin.nj2k.DebugFlags
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
@@ -131,6 +130,7 @@ private val inferringTypesPostProcessingGroup = NamedPostProcessingGroup(
 private val bugfixPostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.bugfix"),
     listOfNotNull(
+        //UpdateStaticReferenceProcessing(),
         UpdateStaticReferenceProcessing(),
     )
 )
