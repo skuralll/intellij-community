@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.j2k.NamedPostProcessingGroup
 import org.jetbrains.kotlin.j2k.postProcessings.*
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.idea.j2k.post.processing.processings.LoggingProcessing
+import org.jetbrains.kotlin.j2k.PostProcessing
 import org.jetbrains.kotlin.nj2k.DebugFlags
 import org.jetbrains.kotlin.psi.KtBinaryExpression
 import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
@@ -126,6 +127,12 @@ private val inferringTypesPostProcessingGroup = NamedPostProcessingGroup(
     )
 )
 
+// 根本的な修正が難しい変換ミスを修正するためのグループ
+private val bugfixPostProcessingGroup = NamedPostProcessingGroup(
+    KotlinNJ2KServicesBundle.message("processing.step.bugfix"),
+    listOfNotNull()
+)
+
 private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.cleaning.up.code"),
     listOfNotNull(
@@ -140,7 +147,7 @@ private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
         addOrRemoveModifiersProcessingGroup,
         inspectionLikePostProcessingGroup,
         removeRedundantElementsProcessingGroup,
-        cleaningUpDiagnosticBasedPostProcessingGroup,
+        cleaningUpDiagnosticBasedPostProcessingGroup
     )
 )
 
@@ -168,6 +175,7 @@ private val optimizingImportsAndFormattingCodePostProcessingGroup = NamedPostPro
 internal val allProcessings: List<NamedPostProcessingGroup> = listOf(
     inferringTypesPostProcessingGroup,
     cleaningUpCodePostProcessingGroup,
+    bugfixPostProcessingGroup,
     loggingPostProcessingGroup,
     optimizingImportsAndFormattingCodePostProcessingGroup
 )
