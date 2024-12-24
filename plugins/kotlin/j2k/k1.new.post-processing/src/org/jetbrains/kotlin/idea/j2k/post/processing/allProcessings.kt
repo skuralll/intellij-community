@@ -130,7 +130,9 @@ private val inferringTypesPostProcessingGroup = NamedPostProcessingGroup(
 // 根本的な修正が難しい変換ミスを修正するためのグループ
 private val bugfixPostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.bugfix"),
-    listOfNotNull()
+    listOfNotNull(
+        UpdateStaticReferenceProcessing(),
+    )
 )
 
 private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
