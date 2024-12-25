@@ -55,16 +55,18 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
 
     // 適用対象のオブジェクト(, companion object)があれば取得する
     private fun findReferencedObject(callee: CallableDescriptor, ktFile: KtFile): KtObjectDeclaration? {
-        ktFile.findChildrenByClass(KtClassOrObject::class.java).forEach { ktClassOrObject ->
-            if (ktClassOrObject.name == callee.containingDeclaration.name.identifier) {
-                if (ktClassOrObject is KtObjectDeclaration) {
-                    return ktClassOrObject
-                } else {
-                    return getCompanionObject(ktClassOrObject as KtClass)
+        return runReadAction {
+            ktFile.findChildrenByClass(KtClassOrObject::class.java).forEach { ktClassOrObject ->
+                if (ktClassOrObject.name == callee.containingDeclaration.name.identifier) {
+                    return@runReadAction if (ktClassOrObject is KtObjectDeclaration) {
+                        ktClassOrObject
+                    } else {
+                        getCompanionObject(ktClassOrObject as KtClass)
+                    }
                 }
             }
+            null
         }
-        return null
     }
 
     // 適用対象のファイルがあれば取得する
