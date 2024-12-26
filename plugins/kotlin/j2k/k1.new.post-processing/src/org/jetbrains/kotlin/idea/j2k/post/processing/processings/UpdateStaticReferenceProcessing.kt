@@ -72,8 +72,12 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
                     val parent = refElement.parent
                     val prevElement = refElement.getPreviousValidElement() ?: return@runUndoTransparentActionInEdt
                     val argument = refElement.valueArguments.firstOrNull() ?: return@runUndoTransparentActionInEdt
+                    // 要素生成
+                    val expressionText = "${property.name} = ${argument.text}"
+                    val newElement = factory.createExpression(expressionText)
+                    val addedElement = parent.addAfter(newElement, prevElement)
+                    // 元の要素削除
                     refElement.delete()
-                    parent.addAfter(factory.createExpression("${property.name} = ${argument.text}"), prevElement)
                 }
             }
         }
