@@ -4,8 +4,10 @@ package org.jetbrains.kotlin.idea.j2k.post.processing.processings
 import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.editor.RangeMarker
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.analysis.api.KaSession
+import org.jetbrains.kotlin.analysis.api.calls.KtCall
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.containingPackage
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
@@ -20,12 +22,18 @@ import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 
 class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
-    override fun runProcessing(file: KtFile, allFiles: List<KtFile>, rangeMarker: RangeMarker?, converterContext: NewJ2kConverterContext) {
-        // staticなメンバへの参照とその参照先を収集する
-        val staticRefs = getStaticReferences(file, converterContext)
-        // 収集した参照要素について適用処理を行う
-        staticRefs.forEach { (refElement, callee) ->
-            applyProcessing(refElement, callee, allFiles)
+    override fun runProcessing(
+        ktFile: KtFile,
+        allFiles: List<KtFile>,
+        rangeMarker: RangeMarker?,
+        converterContext: NewJ2kConverterContext
+    ) {
+        val refExpressions = getReferences(ktFile)
+        refExpressions.forEach { refExpression ->
+            val calleeDescriptor = getReferenceDescriptorOrNull(refExpression) ?: return@forEach
+            if (!DescriptorUtils.isStaticDeclaration(calleeDescriptor)) return@forEach
+            val accessorType = getAccessorType(refExpression, calleeDescriptor) ?: return@forEach
+            applyProcessing(refExpression, calleeDescriptor, accessorType, allFiles)
         }
     }
 
@@ -39,17 +47,35 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
     }
 
     // 適用処理
-    private fun applyProcessing(refElement: KtCallExpression, callee: CallableDescriptor, allFiles: List<KtFile>) {
+    private fun applyProcessing(
+        refElement: KtCallExpression,
+        callee: CallableDescriptor,
+        accessorType: AccessorType,
+        allFiles: List<KtFile>
+    ) {
         val referencedFile = findReferencedFile(callee, allFiles) ?: return
         val referencedObject = findReferencedObject(callee, referencedFile) ?: return
-        if (referencedObject.getDeclaration(callee.name.asString(), KtNamedFunction::class.java).isNotEmpty()) return // getter/setterが存在する場合は何もしない
-        val propertyName = propertyNamesByAccessorName(callee.name).firstOrNull()?.identifier ?: return
-        val property = referencedObject.getDeclaration(propertyName, KtProperty::class.java).firstOrNull() ?: return
+        if (referencedObject.getDeclaration(callee.name.asString(), KtNamedFunction::class.java)
+                .isNotEmpty()
+        ) return // getter/setterが存在する場合は何もしない
+        val propertyNameCandidates = propertyNamesByAccessorName(callee.name)
+        val propertyName = propertyNameCandidates.find { referencedObject.hasDeclaration(it.identifier, KtProperty::class.java) } ?: return
+        val property = referencedObject.getDeclaration(propertyName.identifier, KtProperty::class.java).firstOrNull() ?: return
         // 適用
         runUndoTransparentActionInEdt(inWriteAction = true) {
             val factory = KtPsiFactory(refElement)
-            val newRefElement = factory.createExpression("${property.name}")
-            refElement.replace(newRefElement)
+            when(accessorType){
+                AccessorType.GETTER -> {
+                    refElement.replace(factory.createExpression("${property.name}"))
+                }
+                AccessorType.SETTER -> {
+                    val parent = refElement.parent
+                    val prevElement = refElement.getPreviousValidElement() ?: return@runUndoTransparentActionInEdt
+                    val argument = refElement.valueArguments.firstOrNull() ?: return@runUndoTransparentActionInEdt
+                    refElement.delete()
+                    parent.addAfter(factory.createExpression("${property.name} = ${argument.text}"), prevElement)
+                }
+            }
         }
     }
 
@@ -82,9 +108,13 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
         return klass.declarations.filterIsInstance<KtObjectDeclaration>().firstOrNull { it.isCompanion() }
     }
 
-    // setterまたはgetterかどうかを判定する
-    private fun isSetterOrGetter(callee: CallableDescriptor): Boolean {
-        return callee.name.asString().startsWith("set") || callee.name.asString().startsWith("get")
+    private fun getAccessorType(refElement: KtCallExpression, callee: CallableDescriptor): AccessorType? {
+        val argumentsSize = refElement.valueArguments.size
+        return when {
+            callee.name.asString().startsWith("set") && argumentsSize == 1 -> AccessorType.SETTER
+            callee.name.asString().startsWith("get") && argumentsSize == 0 -> AccessorType.GETTER
+            else -> null
+        }
     }
 
     // 指定した名前の要素（メソッドやプロパティ）があるかどうかを取得する
@@ -97,48 +127,32 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
         return this.declarations.filterIsInstance(clazz).filter { it.name == name }
     }
 
-    // staticなgetter/setter呼び出しを収集する
-    private fun getStaticReferences(
-        file: KtFile,
-        converterContext: NewJ2kConverterContext,
-    ): List<Pair<KtCallExpression, CallableDescriptor>> {
-        val visitor = CollectStaticReferencesVisitor(converterContext)
-        file.accept(visitor)
-        return visitor.getCollectedReferences()
+    // 参照を収集する
+    private fun getReferences(ktFile: KtFile): List<KtCallExpression> {
+        return runReadAction { PsiTreeUtil.collectElementsOfType(ktFile, KtCallExpression::class.java).toList() }
     }
 
-    // staticなgetter/setter呼び出しを収集するためのVisitor
-    inner class CollectStaticReferencesVisitor(val converterContext: NewJ2kConverterContext) : PsiElementVisitor() {
-        private val refs = mutableListOf<Pair<KtCallExpression, CallableDescriptor>>()
-        override fun visitElement(element: PsiElement) {
-            when (element) {
-                is KtCallExpression -> {
-                    runReadAction {
-                        getStaticReferenceDescriptorOrNull(element)?.let { descriptor ->
-                            if (isSetterOrGetter(descriptor)) {
-                                refs += element to descriptor
-                            }
-                        }
-                    }
-                }
-            }
-            element.acceptChildren(this)
-        }
-
-        // 収集した要素を返す
-        fun getCollectedReferences(): List<Pair<KtCallExpression, CallableDescriptor>> = refs
-
-        // expressionの参照先がstaticなメンバであれば
-        private fun getStaticReferenceDescriptorOrNull(expression: KtCallExpression): CallableDescriptor? {
+    // 参照先のDescriptorを取得する
+    private fun getReferenceDescriptorOrNull(expression: KtCallExpression): CallableDescriptor? {
+        return runReadAction {
             val bindingContext = expression.analyze(BodyResolveMode.PARTIAL)
-            val resolvedCall = expression.getResolvedCall(bindingContext) ?: return null
-            val descriptor = resolvedCall.resultingDescriptor
-            // Javaのstaticメンバの場合
-            if (DescriptorUtils.isStaticDeclaration(descriptor)) {
-                return descriptor
-            }
-            // もし他に条件があれば追加
-            return null
+            val resolvedCall = expression.getResolvedCall(bindingContext)
+            resolvedCall?.resultingDescriptor
         }
     }
+
+    // 空白行を無視して前の要素を取得する
+    private fun PsiElement.getPreviousValidElement(): PsiElement? {
+        var prevElement = this.prevSibling
+        while (prevElement is PsiWhiteSpace) {
+            prevElement = prevElement.prevSibling
+        }
+        return prevElement
+    }
+
+    private enum class AccessorType {
+        GETTER,
+        SETTER
+    }
+
 }
