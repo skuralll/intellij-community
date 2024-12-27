@@ -29,6 +29,7 @@ import com.intellij.ui.EditorTextField
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.base.psi.kotlinFqName
 import org.jetbrains.kotlin.nj2k.getIdentifier
+import org.jetbrains.kotlin.nj2k.runUndoTransparentActionInEdt
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import java.awt.Point
 
@@ -101,20 +102,22 @@ class SourceViewField(document: Document?, project: Project, fileType: FileType,
 
     // ファイル切り替えメソッド
     fun switchFile(document: Document?, fileType: FileType) {
-        CommandProcessor.getInstance().executeCommand(project, {
-            CommandProcessor.getInstance().runUndoTransparentAction {
-                runWriteAction {
-                    this.document.setText(document?.text ?: "")
-                    this.fileType = fileType
-                    setPsi(fileType, document?.text ?: "")
+        runUndoTransparentActionInEdt(inWriteAction = true){
+            CommandProcessor.getInstance().executeCommand(project, {
+                CommandProcessor.getInstance().runUndoTransparentAction {
+                    runWriteAction {
+                        this.document.setText(document?.text ?: "")
+                        this.fileType = fileType
+                        setPsi(fileType, document?.text ?: "")
+                    }
                 }
-            }
-            // カーソル位置を戦闘に戻す
-            invokeLater {
-                setCaretPosition(0)
-                editor?.scrollingModel?.scrollToCaret(ScrollType.RELATIVE)
-            }
-        }, "SwitchFile", null, UndoConfirmationPolicy.DO_NOT_REQUEST_CONFIRMATION)
+                // カーソル位置を戦闘に戻す
+                invokeLater {
+                    setCaretPosition(0)
+                    editor?.scrollingModel?.scrollToCaret(ScrollType.RELATIVE)
+                }
+            }, "SwitchFile", null, UndoConfirmationPolicy.DO_NOT_REQUEST_CONFIRMATION)
+        }
     }
 
     fun switchFile(file: VirtualFile) {

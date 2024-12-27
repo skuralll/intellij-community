@@ -126,6 +126,15 @@ private val inferringTypesPostProcessingGroup = NamedPostProcessingGroup(
     )
 )
 
+// 根本的な修正が難しい変換ミスを修正するためのグループ
+private val bugfixPostProcessingGroup = NamedPostProcessingGroup(
+    KotlinNJ2KServicesBundle.message("processing.step.bugfix"),
+    listOfNotNull(
+        //UpdateStaticReferenceProcessing(),
+        UpdateStaticReferenceProcessing(),
+    )
+)
+
 private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.cleaning.up.code"),
     listOfNotNull(
@@ -140,7 +149,7 @@ private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
         addOrRemoveModifiersProcessingGroup,
         inspectionLikePostProcessingGroup,
         removeRedundantElementsProcessingGroup,
-        cleaningUpDiagnosticBasedPostProcessingGroup,
+        cleaningUpDiagnosticBasedPostProcessingGroup
     )
 )
 
@@ -168,6 +177,7 @@ private val optimizingImportsAndFormattingCodePostProcessingGroup = NamedPostPro
 internal val allProcessings: List<NamedPostProcessingGroup> = listOf(
     inferringTypesPostProcessingGroup,
     cleaningUpCodePostProcessingGroup,
+    bugfixPostProcessingGroup,
     loggingPostProcessingGroup,
     optimizingImportsAndFormattingCodePostProcessingGroup
 )

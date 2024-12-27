@@ -72,17 +72,22 @@ class ExternalUsagesFixer(private val usages: List<JKMemberInfoWithUsages>) {
 
         if (!element.isSimpleProperty()) return
 
+        /* 以下，カスタムアクセサの無い単純なProperty */
+
         val accessorKind = if (javaElement.name.startsWith("set")) SETTER else GETTER
 
         for (usage in kotlinUsages) {
             conversions += AccessorToPropertyKotlinExternalConversion(member.name, accessorKind, usage)
         }
 
-        if (javaUsages.isNotEmpty() && element.hasJvmFieldAnnotation()) {
-            for (usage in javaUsages) {
-                conversions += AccessorToPropertyJavaExternalConversion(member.name, accessorKind, usage)
-            }
-        }
+        javaUsages.forEach { usage -> conversions += AccessorToPropertyJavaExternalConversion(member.name, accessorKind, usage) }
+        //if(element.hasJvmAnnotations()){
+        //    // 元々の処理だが，Jvmアノテーションがあれば変換をする必要がない．バグの可能性がある．
+        //    javaUsages.forEach { usage -> conversions += AccessorToPropertyJavaExternalConversion(member.name, accessorKind, usage) }
+        //}else{
+        //    // Jvmアノテーションがなく，Java側でのアクセスがある場合は，Java側でアクセサ呼び出しををプロパティ参照に変換する
+        //    javaUsages.forEach { usage -> conversions += AccessorToPropertyJavaExternalConversion(member.name, accessorKind, usage) }
+        //}
     }
 
     private fun KtNamedDeclaration.hasJvmFieldAnnotation(): Boolean =
@@ -124,6 +129,12 @@ class ExternalUsagesFixer(private val usages: List<JKMemberInfoWithUsages>) {
         val member: JKMemberData,
         val javaUsages: List<PsiElement>,
         val kotlinUsages: List<KtElement>
+    )
+
+    // 変換対象外の呼び出しと対象の呼び出しをペアにして保持する
+    data class JKMemberInfoWithUsagesPair(
+        val internal : JKMemberInfoWithUsages,
+        val external : JKMemberInfoWithUsages
     )
 }
 

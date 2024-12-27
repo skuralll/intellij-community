@@ -106,41 +106,61 @@ class NewExternalCodeProcessing(
     override fun prepareWriteOperation(progress: ProgressIndicator?): () -> Unit {
         progress?.text = KotlinNJ2KBundle.message("progress.searching.usages.to.update")
 
-        val usages = mutableListOf<ExternalUsagesFixer.JKMemberInfoWithUsages>()
+        val externalUsages = mutableListOf<ExternalUsagesFixer.JKMemberInfoWithUsages>()
+        val internalUsages = mutableListOf<ExternalUsagesFixer.JKMemberInfoWithUsages>()
         for ((index, member) in members.values.withIndex()) {
             if (progress != null) {
                 progress.text2 = member.fqName?.shortName()?.identifier ?: continue
                 progress.checkCanceled()
 
                 ProgressManager.getInstance().runProcess(
-                    { usages += member.collectUsages() },
+                    {
+                        val usages = member.collectUsages()
+                        externalUsages += usages.external
+                        internalUsages += usages.internal
+                    },
                     ProgressPortionReporter(progress, index / members.size.toDouble(), 1.0 / members.size)
                 )
             } else {
-                usages += member.collectUsages()
+                val usages = member.collectUsages()
+                externalUsages += usages.external
+                internalUsages += usages.internal
             }
         }
         return {
-            ExternalUsagesFixer(usages).fix()
+            ExternalUsagesFixer(externalUsages).fix()
+            // TODO : ここに独自の後処理を追加する(メソッド呼び出しをプロパティ参照に変えるなど．これにはJKMemberDataを流用できそうなので，ExternalCodeProcessingの一部として実装する)
+            // TODO : internalUsagesを使う
+            //internalUsages.forEach{
+            //    println("${it.member.name}  Java: ${it.javaUsages.size}  Kotlin: ${it.kotlinUsages.size}")
+            //}
         }
     }
 
-    private fun JKMemberData.collectUsages(): ExternalUsagesFixer.JKMemberInfoWithUsages {
-        val javaUsages = mutableListOf<PsiElement>()
-        val kotlinUsages = mutableListOf<KtElement>()
+    private fun JKMemberData.collectUsages(): ExternalUsagesFixer.JKMemberInfoWithUsagesPair {
+        // 変換対象外参照
+        val javaUsagesExternal = mutableListOf<PsiElement>()
+        val kotlinUsagesExternal = mutableListOf<KtElement>()
+        // 変換対象内参照
+        val javaUsagesInternal = mutableListOf<PsiElement>()
+        val kotlinUsagesInternal = mutableListOf<KtElement>()
+        // 参照を探す
         if (this is JKMemberDataCameFromJava<*>) referenceSearcher.findUsagesForExternalCodeProcessing(
             javaElement,
             searchJava = searchInJavaFiles,
             searchKotlin = searchInKotlinFiles
         ).forEach { usage ->
             val element = usage.element
-            if (isInConversionContext(element)) return@forEach
+            if(javaElement.containingFile == element.containingFile) return@forEach // 同一ファイルからの参照は弾く
             when {
-                element is KtElement -> kotlinUsages += element
-                element.language == JavaLanguage.INSTANCE -> javaUsages += element
+                element is KtElement -> if (isInConversionContext(element)) kotlinUsagesInternal += element else kotlinUsagesExternal += element
+                element.language == JavaLanguage.INSTANCE -> if (isInConversionContext(element)) javaUsagesInternal += element else javaUsagesExternal += element
             }
         }
-        return ExternalUsagesFixer.JKMemberInfoWithUsages(this, javaUsages, kotlinUsages)
+        return ExternalUsagesFixer.JKMemberInfoWithUsagesPair(
+            ExternalUsagesFixer.JKMemberInfoWithUsages(this, javaUsagesInternal, kotlinUsagesInternal),
+            ExternalUsagesFixer.JKMemberInfoWithUsages(this, javaUsagesExternal, kotlinUsagesExternal)
+        )
     }
 }
 
