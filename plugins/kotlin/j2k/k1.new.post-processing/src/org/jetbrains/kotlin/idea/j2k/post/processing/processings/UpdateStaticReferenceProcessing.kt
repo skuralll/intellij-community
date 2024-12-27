@@ -8,16 +8,21 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.containingPackage
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.intentions.callExpression
 import org.jetbrains.kotlin.j2k.FileBasedPostProcessing
 import org.jetbrains.kotlin.j2k.PostProcessingApplier
 import org.jetbrains.kotlin.load.java.propertyNamesByAccessorName
 import org.jetbrains.kotlin.nj2k.NewJ2kConverterContext
 import org.jetbrains.kotlin.nj2k.runUndoTransparentActionInEdt
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameOrNull
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 
 class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
@@ -63,10 +68,11 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
         // 適用
         runUndoTransparentActionInEdt(inWriteAction = true) {
             val factory = KtPsiFactory(refElement)
-            when(accessorType){
+            when (accessorType) {
                 AccessorType.GETTER -> {
                     refElement.replace(factory.createExpression("${property.name}"))
                 }
+
                 AccessorType.SETTER -> {
                     val parent = refElement.parent
                     val prevElement = refElement.getPreviousValidElement() ?: return@runUndoTransparentActionInEdt
@@ -74,7 +80,7 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
                     // 要素生成
                     val expressionText = "${property.name} = ${argument.text}"
                     val newElement = factory.createExpression(expressionText)
-                    val addedElement = parent.addAfter(newElement, prevElement)
+                    parent.addAfter(newElement, prevElement)
                     // 元の要素削除
                     refElement.delete()
                 }
@@ -140,8 +146,39 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
         return runReadAction {
             val bindingContext = expression.analyze(BodyResolveMode.PARTIAL)
             val resolvedCall = expression.getResolvedCall(bindingContext)
-            resolvedCall?.resultingDescriptor
+            if (resolvedCall != null) {
+                // 通常の参照
+                resolvedCall.resultingDescriptor
+            } else {
+                // Companionを参照する場合の処理
+                val qualifiedParentExpression = (expression.parent as? KtQualifiedExpression) ?: return@runReadAction null // 呼び出し文前夜位
+                val callee = qualifiedParentExpression.callExpression ?: return@runReadAction null // メソッド呼び出し部分
+                val receiver =
+                    (qualifiedParentExpression.receiverExpression as? KtDotQualifiedExpression) ?: return@runReadAction null // レシーバ部分
+                if (!isCompanionReference(receiver)) return@runReadAction null
+                val refTarget = receiver.receiverExpression.getNameReferenceOrSelector() ?: return@runReadAction null // Companionの前の参照部分
+                // 参照先の対象メソッドを取得
+                val bindingContextForCompanion = refTarget.analyze(BodyResolveMode.FULL)
+                val descriptor = (bindingContextForCompanion[BindingContext.REFERENCE_TARGET, refTarget] as? ClassDescriptor)
+                    ?: return@runReadAction null
+                val calleeName = callee.calleeExpression?.text ?: return@runReadAction null
+                findStaticMethod(descriptor, calleeName)
+            }
         }
+    }
+
+    // Companionを参照しているか
+    private fun isCompanionReference(receiver: KtDotQualifiedExpression): Boolean {
+        val selector = receiver.selectorExpression as? KtReferenceExpression ?: return false
+        return selector.text == "Companion"
+    }
+
+    // クラスの中から指定した名前の静的メソッドを取得する
+    private fun findStaticMethod(descriptor: ClassDescriptor, methodName: String): FunctionDescriptor? {
+        return descriptor.staticScope
+            .getContributedDescriptors()
+            .filterIsInstance<FunctionDescriptor>()
+            .firstOrNull { it.fqNameOrNull()?.shortName()?.asString() == methodName }
     }
 
     // 空白行を無視して前の要素を取得する
@@ -151,6 +188,15 @@ class UpdateStaticReferenceProcessing : FileBasedPostProcessing() {
             prevElement = prevElement.prevSibling
         }
         return prevElement
+    }
+
+    // 名前参照を取得する
+    private fun KtExpression.getNameReferenceOrSelector(): KtNameReferenceExpression? {
+        return when (this) {
+            is KtNameReferenceExpression -> this
+            is KtDotQualifiedExpression -> (this.selectorExpression as? KtNameReferenceExpression)
+            else -> null
+        }
     }
 
     private enum class AccessorType {
