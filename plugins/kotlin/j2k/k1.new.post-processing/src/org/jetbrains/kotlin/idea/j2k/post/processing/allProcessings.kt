@@ -156,7 +156,7 @@ private val cleaningUpCodePostProcessingGroup = NamedPostProcessingGroup(
 private val loggingPostProcessingGroup = NamedPostProcessingGroup(
     KotlinNJ2KServicesBundle.message("processing.step.logging"),
     listOf(
-        LoggingProcessing()
+        //LoggingProcessing()
     )
 )
 

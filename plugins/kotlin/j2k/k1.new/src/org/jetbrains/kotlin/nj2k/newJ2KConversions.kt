@@ -68,5 +68,5 @@ fun getNewJ2KConversions(context: NewJ2kConverterContext): List<Conversion> = li
     AddConstModifierConversion(context),
     EnumSyntheticValuesMethodConversion(context),
     // logging
-    AddElementsInfoForLogConversion(context)
+    //AddElementsInfoForLogConversion(context)
 )
